@@ -9,8 +9,9 @@ void setupPower() {
     pinMode(POWER_PIN, OUTPUT);
     digitalWrite(POWER_PIN, HIGH);
     
-    // Initialize M5Unified for power management
+    // Initialize M5Unified for power management (without serial)
     auto cfg = M5.config();
+    cfg.serial_baudrate = 0;  // Disable serial initialization
     M5.begin(cfg);
 }
 
