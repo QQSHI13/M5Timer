@@ -1,0 +1,7 @@
+{
+    "C_Cpp.default.configurationProvider": "platformio.platformio-ide",
+    "C_Cpp.intelliSenseCacheSize": 512,
+    "files.associations": {
+        "*.ino": "cpp"
+    }
+}

@@ -1,0 +1,20 @@
+// config.h.example - Copy to config.h and fill in your credentials
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// WiFi credentials
+const char* WIFI_SSID = "YOUR_WIFI_SSID";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+
+// API endpoints
+const char* ENDPOINT_FOCUS = "http://192.168.1.100:8080/api/focus";
+const char* ENDPOINT_BREAK = "http://192.168.1.100:8080/api/break";
+const char* ENDPOINT_EMERGENCY = "http://192.168.1.100:8080/api/emergency";
+
+// Optional: Static IP configuration
+// Uncomment and fill if you want static IP
+// const char* STATIC_IP = "192.168.1.200";
+// const char* GATEWAY = "192.168.1.1";
+// const char* SUBNET = "255.255.255.0";
+
+#endif
