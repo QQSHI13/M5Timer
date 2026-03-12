@@ -266,6 +266,7 @@ void handleSyncMode() {
                 g_timerState.reset(g_settings);
             }
             updateLED(SystemMode::TIMER, g_timerState.mode);
+            playChime();  // Sound on sync exit
             return;
         }
     }
@@ -279,6 +280,7 @@ void handleSyncMode() {
             g_timerState.reset(g_settings);
         }
         updateLED(SystemMode::TIMER, g_timerState.mode);
+        playChime();  // Sound on sync exit
     }
 }
 
