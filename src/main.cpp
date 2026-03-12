@@ -48,20 +48,9 @@ void setup() {
     loadTimerState(g_timerState);
     setBuzzerSettings(g_settings);
     
-    // Check reset reason
-    esp_reset_reason_t resetReason = esp_reset_reason();
-    if (resetReason == ESP_RST_POWERON || resetReason == ESP_RST_EXT) {
-        Serial.println("Cold boot / Hardware reset");
-    } else if (resetReason == ESP_RST_DEEPSLEEP) {
-        Serial.println("Wake from deep sleep");
-    } else {
-        Serial.println("Other reset reason");
-    }
-    
-    // Enter initial mode
+    // Enter initial mode (no serial output)
     g_state.systemMode = SystemMode::INITIAL;
     g_state.modeStartTime = millis();
-    Serial.println("INITIAL MODE: 5 seconds");
     updateLED(SystemMode::INITIAL, TimerMode::WORK);
 }
 
@@ -92,45 +81,33 @@ void handleInitialMode() {
     unsigned long now = millis();
     unsigned long elapsed = (now - g_state.modeStartTime) / 1000;
     
-    // Check for double-click to enter sync mode
+    // Check for double-click to enter sync mode (no serial output in initial mode)
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::DOUBLE_CLICK) {
-        Serial.println("Double-click detected → SYNC MODE");
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        Serial.println("=== SYNC MODE ===");
-        Serial.println("Waiting for PING (15s timeout)...");
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
     
-    // Handle countdown and timeout
+    // Handle countdown and timeout (no serial output in initial mode)
     unsigned long remaining = INITIAL_MODE_SECONDS - elapsed;
     static int lastBeepSecond = -1;
     
     if ((int)remaining != lastBeepSecond && remaining <= 5) {
         playCountdownBeep(remaining);
-        if (remaining > 0) {
-            Serial.println(String(remaining) + "...");
-        }
         lastBeepSecond = remaining;
     }
     
     if (elapsed >= INITIAL_MODE_SECONDS) {
-        Serial.println("Initial mode timeout → TIMER MODE");
-        
         // Start fresh with WORK mode (deep work, part 1)
         g_timerState.mode = TimerMode::WORK;
         g_timerState.completedWorkSessions = 0;
         g_timerState.reset(g_settings);
         saveTimerState(g_timerState);
         
-        Serial.println("Starting: WORK - " + String(g_timerState.remainingSeconds / 60) + ":" + 
-                      String(g_timerState.remainingSeconds % 60));
-        
         g_state.systemMode = SystemMode::TIMER;
-        Serial.println("TIMER MODE");
         updateLED(SystemMode::TIMER, g_timerState.mode);
         playTimerStartSound(g_timerState.mode, g_settings);
     }
