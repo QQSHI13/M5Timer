@@ -31,6 +31,11 @@ void switchToNextModeFromCompleted();
 
 // ============== SETUP ==============
 void setup() {
+    Serial.begin(115200);
+    delay(100);
+    
+    Serial.println("\n=== M5Capsule Pomodoro ===");
+    
     // Setup hardware
     setupPower();
     setupLED();
@@ -43,27 +48,10 @@ void setup() {
     loadTimerState(g_timerState);
     setBuzzerSettings(g_settings);
     
-    // Enter initial mode (serial not initialized)
+    // Enter initial mode
     g_state.systemMode = SystemMode::INITIAL;
     g_state.modeStartTime = millis();
-    g_state.serialInitialized = false;
     updateLED(SystemMode::INITIAL, TimerMode::WORK);
-}
-
-// ============== SERIAL HELPER ==============
-void initSerialIfNeeded() {
-    if (!g_state.serialInitialized) {
-        Serial.begin(115200);
-        delay(100);
-        g_state.serialInitialized = true;
-    }
-}
-
-void closeSerial() {
-    if (g_state.serialInitialized) {
-        Serial.end();
-        g_state.serialInitialized = false;
-    }
 }
 
 // ============== LOOP ==============
@@ -99,7 +87,6 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        initSerialIfNeeded();
         Serial.println("=== SYNC MODE ===");
         Serial.println("Waiting for PING (15s timeout)...");
         updateLED(SystemMode::SYNC, TimerMode::WORK);
@@ -125,6 +112,9 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::TIMER;
         updateLED(SystemMode::TIMER, g_timerState.mode);
         playTimerStartSound(g_timerState.mode, g_settings);
+        
+        // Close serial to save power
+        Serial.end();
     }
 }
 
@@ -164,7 +154,6 @@ void handleTimerMode() {
             g_state.systemMode = SystemMode::SYNC;
             g_state.modeStartTime = millis();
             g_state.syncPingReceived = false;
-            initSerialIfNeeded();
             Serial.println("Double-click → SYNC MODE");
             Serial.println("=== SYNC MODE ===");
             Serial.println("Waiting for PING (15s timeout)...");
@@ -242,7 +231,7 @@ void handleSyncMode() {
         unsigned long elapsed = (millis() - g_state.modeStartTime) / 1000;
         if (elapsed >= SYNC_TIMEOUT_SECONDS) {
             Serial.println("Sync timeout - returning to TIMER MODE");
-            closeSerial();
+            Serial.end();
             g_state.systemMode = SystemMode::TIMER;
             if (!g_timerState.isRunning) {
                 g_timerState.reset(g_settings);
@@ -257,7 +246,7 @@ void handleSyncMode() {
     if (processSerialCommands(g_settings, g_timerState, g_state.syncPingReceived)) {
         // PONG received - transition to timer mode
         g_state.systemMode = SystemMode::TIMER;
-        closeSerial();
+        Serial.end();
         if (!g_timerState.isRunning) {
             g_timerState.reset(g_settings);
         }

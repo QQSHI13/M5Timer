@@ -64,5 +64,4 @@ struct GlobalState {
     unsigned long modeStartTime = 0;
     bool syncPingReceived = false;
     TimerMode completedFromMode = TimerMode::WORK;
-    bool serialInitialized = false;
 };
