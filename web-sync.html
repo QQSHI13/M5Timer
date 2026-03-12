@@ -398,11 +398,14 @@
                 } else {
                     // This is response to our final PONG - device is exiting
                     statusEl.textContent = 'Sync complete. Device returned to TIMER MODE.';
-                    statusEl.className = 'status connected';
+                    statusEl.className = 'status disconnected';
                     log('Device exited sync mode');
                     connectBtn.textContent = 'Connect';
                     syncBtn.disabled = true;
                     getBtn.disabled = true;
+                    // Reset state so button works for new connection
+                    connected = false;
+                    pingSent = false;
                 }
             } else if (msg.startsWith('SETTINGS:')) {
                 // Parse settings from device
