@@ -149,11 +149,13 @@ void handleTimerMode() {
             lastSecond = rtcTime.seconds;
             return;
         } else if (event == ButtonEvent::DOUBLE_CLICK) {
-            // Enter sync mode
+            // Enter sync mode - reopen serial
             switchModeStartTime = 0;
             g_state.systemMode = SystemMode::SYNC;
             g_state.modeStartTime = millis();
             g_state.syncPingReceived = false;
+            Serial.begin(115200);
+            delay(100);
             Serial.println("Double-click → SYNC MODE");
             Serial.println("=== SYNC MODE ===");
             Serial.println("Waiting for PING (15s timeout)...");
