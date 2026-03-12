@@ -120,17 +120,17 @@ void handleInitialMode() {
     if (elapsed >= INITIAL_MODE_SECONDS) {
         Serial.println("Initial mode timeout → TIMER MODE");
         
-        loadTimerState(g_timerState);
+        // Start fresh with WORK mode (deep work, part 1)
+        g_timerState.mode = TimerMode::WORK;
+        g_timerState.completedWorkSessions = 0;
+        g_timerState.reset(g_settings);
+        saveTimerState(g_timerState);
         
-        Serial.println("Restored: " + timerModeToString(g_timerState.mode) + 
-                      " - " + String(g_timerState.remainingSeconds / 60) + ":" + 
+        Serial.println("Starting: WORK - " + String(g_timerState.remainingSeconds / 60) + ":" + 
                       String(g_timerState.remainingSeconds % 60));
         
         g_state.systemMode = SystemMode::TIMER;
         Serial.println("TIMER MODE");
-        if (!g_timerState.isRunning) {
-            g_timerState.reset(g_settings);
-        }
         updateLED(SystemMode::TIMER, g_timerState.mode);
         playTimerStartSound(g_timerState.mode, g_settings);
     }
@@ -139,7 +139,7 @@ void handleInitialMode() {
 void handleTimerMode() {
     static I2C_BM8563_TimeTypeDef lastRTC;
     static uint8_t lastSecond = 255;
-    static uint8_t completionDisplaySeconds = 0;
+    static unsigned long switchModeStartTime = 0;
     
     I2C_BM8563_TimeTypeDef rtcTime;
     rtc.getTime(&rtcTime);
@@ -149,25 +149,60 @@ void handleTimerMode() {
         lastSecond = rtcTime.seconds;
     }
     
-    // Check for button press
-    ButtonEvent event = getButtonEvent();
-    if (event == ButtonEvent::SINGLE_CLICK) {
-        Serial.println("Single-click: " + String(g_timerState.isRunning ? "Reset timer" : "Change mode"));
+    // Handle SWITCH MODE (COMPLETED state - white LED)
+    if (g_timerState.mode == TimerMode::COMPLETED) {
+        // Initialize switch mode timer on first entry
+        if (switchModeStartTime == 0) {
+            switchModeStartTime = millis();
+            Serial.println("SWITCH MODE: Single-click=change mode, Double-click=sync, 5s timeout=auto-advance");
+        }
         
-        if (g_timerState.isRunning) {
-            // Reset current timer
-            g_timerState.reset(g_settings);
-            saveTimerState(g_timerState);
-            lastRTC = rtcTime;
-            completionDisplaySeconds = 0;
-            updateLED(SystemMode::TIMER, g_timerState.mode);
-            playChime();
-        } else {
-            // Manual mode switch
+        // Check for button events in switch mode
+        ButtonEvent event = getButtonEvent();
+        if (event == ButtonEvent::SINGLE_CLICK) {
+            // Change mode
+            switchModeStartTime = 0;
             switchToNextMode();
             lastRTC = rtcTime;
-            completionDisplaySeconds = 0;
+            lastSecond = rtcTime.seconds;
+            return;
+        } else if (event == ButtonEvent::DOUBLE_CLICK) {
+            // Enter sync mode
+            switchModeStartTime = 0;
+            g_state.systemMode = SystemMode::SYNC;
+            g_state.modeStartTime = millis();
+            g_state.syncPingReceived = false;
+            Serial.println("Double-click → SYNC MODE");
+            Serial.println("=== SYNC MODE ===");
+            Serial.println("Waiting for PING (15s timeout)...");
+            updateLED(SystemMode::SYNC, TimerMode::WORK);
+            return;
         }
+        
+        // Check for 5 second timeout
+        if (millis() - switchModeStartTime >= 5000) {
+            switchModeStartTime = 0;
+            switchToNextModeFromCompleted();
+            lastRTC = rtcTime;
+            lastSecond = rtcTime.seconds;
+        }
+        return;
+    }
+    
+    // Normal timer running mode
+    // Check for button press
+    ButtonEvent event = getButtonEvent();
+    if (event != ButtonEvent::NONE) {
+        Serial.println("Button event: " + String(event == ButtonEvent::SINGLE_CLICK ? "SINGLE" : "DOUBLE"));
+    }
+    if (event == ButtonEvent::SINGLE_CLICK) {
+        Serial.println("Single-click: Reset timer");
+        // Reset current timer
+        g_timerState.reset(g_settings);
+        saveTimerState(g_timerState);
+        lastRTC = rtcTime;
+        updateLED(SystemMode::TIMER, g_timerState.mode);
+        playChime();
     }
     
     // Calculate elapsed seconds using RTC
@@ -200,9 +235,10 @@ void handleTimerMode() {
             g_state.completedFromMode = g_timerState.mode;
             g_timerState.isRunning = false;
             g_timerState.mode = TimerMode::COMPLETED;
-            completionDisplaySeconds = 0;
+            saveTimerState(g_timerState);
             updateLED(SystemMode::TIMER, TimerMode::COMPLETED);
-            Serial.println("Timer completed!");
+            Serial.println("Timer completed! Entering SWITCH MODE");
+            switchModeStartTime = 0;  // Will be set on next loop iteration
             break;
         }
     }
@@ -211,20 +247,10 @@ void handleTimerMode() {
         saveTimerState(g_timerState);
     }
     
-    // Handle completion display
-    if (g_timerState.mode == TimerMode::COMPLETED) {
-        completionDisplaySeconds += elapsedSeconds;
-        if (completionDisplaySeconds >= 5) {
-            completionDisplaySeconds = 0;
-            switchToNextModeFromCompleted();
-            lastRTC = rtcTime;
-            lastSecond = rtcTime.seconds;
-        }
-    }
-    
     // Light sleep
     if (!isBuzzerActive() && g_timerState.isRunning) {
         M5.Power.lightSleep(1000000);
+        delay(10);
     }
 }
 
