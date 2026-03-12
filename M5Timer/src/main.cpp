@@ -150,11 +150,11 @@ void handleTimerMode() {
     }
     
     // Handle SWITCH MODE (COMPLETED state - white LED)
+    // Note: No serial output in switch mode to save power
     if (g_timerState.mode == TimerMode::COMPLETED) {
         // Initialize switch mode timer on first entry
         if (switchModeStartTime == 0) {
             switchModeStartTime = millis();
-            Serial.println("SWITCH MODE: Single-click=change mode, Double-click=sync, 5s timeout=auto-advance");
         }
         
         // Check for button events in switch mode
