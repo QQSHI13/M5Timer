@@ -87,6 +87,8 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
+        Serial.begin(115200);
+        delay(100);
         Serial.println("=== SYNC MODE ===");
         Serial.println("Waiting for PING (15s timeout)...");
         Serial.flush();
