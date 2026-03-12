@@ -17,7 +17,7 @@ void updateLED(SystemMode systemMode, TimerMode timerMode) {
             break;
             
         case SystemMode::SYNC:
-            leds[0] = CRGB(255, 165, 0);  // Orange
+            leds[0] = CRGB(255, 80, 0);  // Red-orange
             break;
             
         case SystemMode::TIMER:
