@@ -31,11 +31,6 @@ void switchToNextModeFromCompleted();
 
 // ============== SETUP ==============
 void setup() {
-    Serial.begin(115200);
-    delay(100);
-    
-    Serial.println("\n=== M5Capsule Pomodoro ===");
-    
     // Setup hardware
     setupPower();
     setupLED();
@@ -48,10 +43,27 @@ void setup() {
     loadTimerState(g_timerState);
     setBuzzerSettings(g_settings);
     
-    // Enter initial mode (no serial output)
+    // Enter initial mode (serial not initialized)
     g_state.systemMode = SystemMode::INITIAL;
     g_state.modeStartTime = millis();
+    g_state.serialInitialized = false;
     updateLED(SystemMode::INITIAL, TimerMode::WORK);
+}
+
+// ============== SERIAL HELPER ==============
+void initSerialIfNeeded() {
+    if (!g_state.serialInitialized) {
+        Serial.begin(115200);
+        delay(100);
+        g_state.serialInitialized = true;
+    }
+}
+
+void closeSerial() {
+    if (g_state.serialInitialized) {
+        Serial.end();
+        g_state.serialInitialized = false;
+    }
 }
 
 // ============== LOOP ==============
@@ -81,12 +93,15 @@ void handleInitialMode() {
     unsigned long now = millis();
     unsigned long elapsed = (now - g_state.modeStartTime) / 1000;
     
-    // Check for double-click to enter sync mode (no serial output in initial mode)
+    // Check for double-click to enter sync mode (serial not initialized in initial mode)
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::DOUBLE_CLICK) {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
+        initSerialIfNeeded();
+        Serial.println("=== SYNC MODE ===");
+        Serial.println("Waiting for PING (15s timeout)...");
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
@@ -149,6 +164,7 @@ void handleTimerMode() {
             g_state.systemMode = SystemMode::SYNC;
             g_state.modeStartTime = millis();
             g_state.syncPingReceived = false;
+            initSerialIfNeeded();
             Serial.println("Double-click → SYNC MODE");
             Serial.println("=== SYNC MODE ===");
             Serial.println("Waiting for PING (15s timeout)...");
@@ -169,11 +185,7 @@ void handleTimerMode() {
     // Normal timer running mode
     // Check for button press
     ButtonEvent event = getButtonEvent();
-    if (event != ButtonEvent::NONE) {
-        Serial.println("Button event: " + String(event == ButtonEvent::SINGLE_CLICK ? "SINGLE" : "DOUBLE"));
-    }
     if (event == ButtonEvent::SINGLE_CLICK) {
-        Serial.println("Single-click: Reset timer");
         // Reset current timer
         g_timerState.reset(g_settings);
         saveTimerState(g_timerState);
@@ -200,12 +212,6 @@ void handleTimerMode() {
         
         if (g_timerState.remainingSeconds > 0) {
             g_timerState.remainingSeconds--;
-            
-            if (g_timerState.remainingSeconds % 60 == 0) {
-                Serial.println(timerModeToString(g_timerState.mode) + 
-                              " - " + String(g_timerState.remainingSeconds / 60) + 
-                              ":" + String(g_timerState.remainingSeconds % 60));
-            }
         }
         
         if (g_timerState.remainingSeconds == 0) {
@@ -214,7 +220,6 @@ void handleTimerMode() {
             g_timerState.mode = TimerMode::COMPLETED;
             saveTimerState(g_timerState);
             updateLED(SystemMode::TIMER, TimerMode::COMPLETED);
-            Serial.println("Timer completed! Entering SWITCH MODE");
             switchModeStartTime = 0;  // Will be set on next loop iteration
             break;
         }
@@ -237,8 +242,8 @@ void handleSyncMode() {
         unsigned long elapsed = (millis() - g_state.modeStartTime) / 1000;
         if (elapsed >= SYNC_TIMEOUT_SECONDS) {
             Serial.println("Sync timeout - returning to TIMER MODE");
+            closeSerial();
             g_state.systemMode = SystemMode::TIMER;
-            Serial.println("TIMER MODE");
             if (!g_timerState.isRunning) {
                 g_timerState.reset(g_settings);
             }
@@ -252,7 +257,7 @@ void handleSyncMode() {
     if (processSerialCommands(g_settings, g_timerState, g_state.syncPingReceived)) {
         // PONG received - transition to timer mode
         g_state.systemMode = SystemMode::TIMER;
-        Serial.println("TIMER MODE");
+        closeSerial();
         if (!g_timerState.isRunning) {
             g_timerState.reset(g_settings);
         }
@@ -275,7 +280,6 @@ void switchToNextMode() {
     saveTimerState(g_timerState);
     updateLED(SystemMode::TIMER, g_timerState.mode);
     playChime();
-    Serial.println("Switched to " + timerModeToString(g_timerState.mode));
 }
 
 void switchToNextModeFromCompleted() {
@@ -292,5 +296,4 @@ void switchToNextModeFromCompleted() {
     saveTimerState(g_timerState);
     updateLED(SystemMode::TIMER, g_timerState.mode);
     playTimerStartSound(newMode, g_settings);
-    Serial.println("Auto-switched to " + timerModeToString(g_timerState.mode));
 }
