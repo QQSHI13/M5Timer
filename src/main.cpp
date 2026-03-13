@@ -87,6 +87,8 @@ void handleInitialMode() {
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::DOUBLE_CLICK) {
         Serial.begin(115200);  // Enable serial for SYNC mode
+        delay(100);  // Wait for serial to stabilize
+        Serial.flush();
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -224,6 +226,8 @@ void handleSwitchMode() {
     } else if (event == ButtonEvent::DOUBLE_CLICK) {
         // Enter sync mode - enable serial first
         Serial.begin(115200);
+        delay(100);  // Wait for serial to stabilize
+        Serial.flush();
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
