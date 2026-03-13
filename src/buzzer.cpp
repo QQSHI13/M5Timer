@@ -29,6 +29,7 @@ void updateBuzzer() {
             buzzerState.currentTone = buzzerState.queue[buzzerState.queueIndex];
             buzzerState.toneStartTime = now;
             ledcWriteTone(0, buzzerState.currentTone.frequency);
+            ledcWrite(0, BUZZER_VOLUME);  // Apply volume (duty cycle)
         } else {
             // Queue finished
             ledcDetachPin(BUZZER_PIN);
@@ -62,6 +63,7 @@ void playToneSequence(const Tone* tones, uint8_t count) {
     
     ledcAttachPin(BUZZER_PIN, 0);
     ledcWriteTone(0, buzzerState.currentTone.frequency);
+    ledcWrite(0, BUZZER_VOLUME);  // Apply volume (duty cycle)
 }
 
 void playSound(SoundType type) {

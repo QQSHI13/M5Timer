@@ -10,7 +10,10 @@
 
 // ============== LED CONFIG ==============
 #define NUM_LEDS    1
-#define LED_BRIGHTNESS 128
+#define LED_BRIGHTNESS 24
+
+// ============== BUZZER CONFIG ==============
+#define BUZZER_VOLUME 64  // 25% of 255 (duty cycle for PWM)
 
 // ============== BUTTON CONFIG ==============
 #define DEBOUNCE_MS     50
