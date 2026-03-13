@@ -6,6 +6,8 @@ static const Settings* settingsPtr = nullptr;
 void setupBuzzer() {
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
+    // Setup PWM channel 0 for buzzer (8-bit resolution, 2kHz default)
+    ledcSetup(0, 2000, 8);
 }
 
 void setBuzzerSettings(const Settings& settings) {
@@ -65,38 +67,46 @@ void playToneSequence(const Tone* tones, uint8_t count) {
 void playSound(SoundType type) {
     if (!settingsPtr || !settingsPtr->soundEnabled) return;
     
-    Tone tones[4];
+    Tone tones[5];
     uint8_t count = 0;
     
     switch (type) {
         case SoundType::WORK_END:
-            // Ascending C5-E5-G5 (523→659→784 Hz) - triumphant major chord
-            tones[0] = {523, 250};
-            tones[1] = {659, 250};
-            tones[2] = {784, 280};
-            count = 3;
+            // Triumphant fanfare: C5-E5-G5-C6 (523→659→784→1047 Hz)
+            tones[0] = {523, 120};
+            tones[1] = {659, 120};
+            tones[2] = {784, 120};
+            tones[3] = {1047, 350};
+            count = 4;
             break;
             
         case SoundType::BREAK_END:
-            // Descending G5-E5-C5 (784→659→523 Hz) - gentle descending
-            tones[0] = {784, 250};
-            tones[1] = {659, 250};
-            tones[2] = {523, 280};
-            count = 3;
+            // Gentle descending: G5-E5-C5-G4 (784→659→523→392 Hz)
+            tones[0] = {784, 150};
+            tones[1] = {659, 150};
+            tones[2] = {523, 150};
+            tones[3] = {392, 300};
+            count = 4;
             break;
             
         case SoundType::CHIME:
-            // Pleasant chime
-            tones[0] = {523, 150};
-            tones[1] = {659, 150};
-            tones[2] = {784, 200};
+            // Nice bell chime: E5-G5-B5
+            tones[0] = {659, 100};
+            tones[1] = {784, 120};
+            tones[2] = {988, 180};
             count = 3;
+            break;
+            
+        case SoundType::MODE_SWITCH:
+            // Quick blip for mode cycling: D5 short
+            tones[0] = {587, 60};
+            count = 1;
             break;
             
         case SoundType::COUNTDOWN:
         default:
-            // Simple beep
-            tones[0] = {880, 100};
+            // Short tick
+            tones[0] = {880, 50};
             count = 1;
             break;
     }
@@ -130,6 +140,11 @@ void playChime() {
     playSound(SoundType::CHIME);
 }
 
+void playModeSwitchSound() {
+    if (!settingsPtr || !settingsPtr->soundEnabled) return;
+    playSound(SoundType::MODE_SWITCH);
+}
+
 void playCountdownBeep(int remaining) {
     if (!settingsPtr || !settingsPtr->soundEnabled) return;
     
@@ -139,7 +154,7 @@ void playCountdownBeep(int remaining) {
         playToneSequence(&tick, 1);
     } else {
         // Final beep (double)
-        Tone finalBeep[2] = {{880, 100}, {880, 200}};
+        const Tone finalBeep[2] = {{880, 100}, {880, 200}};
         playToneSequence(finalBeep, 2);
     }
 }

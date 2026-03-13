@@ -9,9 +9,10 @@ void setupPower() {
     pinMode(POWER_PIN, OUTPUT);
     digitalWrite(POWER_PIN, HIGH);
     
-    // Initialize M5Unified for power management (without serial)
+    // Initialize M5Unified for power management
+    // USB CDC is enabled on boot via platformio.ini, so we keep serial enabled
     auto cfg = M5.config();
-    cfg.serial_baudrate = 0;  // Disable serial - we start it manually in SYNC mode only
+    cfg.serial_baudrate = 115200;
     M5.begin(cfg);
 }
 

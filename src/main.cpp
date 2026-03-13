@@ -27,7 +27,6 @@ void handleInitialMode();
 void handleTimerMode();
 void handleSwitchMode();
 void handleSyncMode();
-void switchToNextMode();
 void switchToNextModeFromCompleted();
 
 // ============== SETUP ==============
@@ -86,11 +85,6 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        Serial.begin(115200);
-        delay(100);
-        Serial.println("=== SYNC MODE ===");
-        Serial.println("Waiting for PING (15s timeout)...");
-        Serial.flush();
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
@@ -133,6 +127,7 @@ void handleTimerMode() {
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::SINGLE_CLICK) {
         // Enter switch mode to allow mode selection
+        g_state.completedFromMode = g_timerState.mode;  // Set for proper transition logic
         g_state.systemMode = SystemMode::SWITCH;
         g_state.modeStartTime = millis();
         updateLED(SystemMode::SWITCH, g_timerState.mode);
@@ -184,21 +179,20 @@ void handleTimerMode() {
 }
 
 void handleSwitchMode() {
-    static unsigned long switchModeStartTime = 0;
-    static bool previewActive = false;
-    
-    // Initialize switch mode timer and preview on first entry
-    if (switchModeStartTime == 0) {
-        switchModeStartTime = millis();
-        previewActive = false;
+    // Detect re-entry into SWITCH mode by checking if modeStartTime changed
+    if (g_state.switchEntryTime != g_state.modeStartTime) {
+        // First call after entering SWITCH mode - reset state
+        g_state.switchEntryTime = g_state.modeStartTime;
+        g_state.switchActionTime = millis();
+        g_state.switchPreviewActive = false;
     }
     
     // Check for button events in switch mode
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::SINGLE_CLICK) {
-        if (!previewActive) {
+        if (!g_state.switchPreviewActive) {
             // First click - start preview with next mode
-            previewActive = true;
+            g_state.switchPreviewActive = true;
             g_state.previewMode = getNextTimerMode(g_timerState, g_settings);
         } else {
             // Subsequent click - cycle to next mode
@@ -206,32 +200,25 @@ void handleSwitchMode() {
             tempState.mode = g_state.previewMode;
             g_state.previewMode = getNextTimerMode(tempState, g_settings);
         }
-        // Reset timer and show preview
-        switchModeStartTime = millis();
+        // Reset timer, show preview, and play sound
+        g_state.switchActionTime = millis();
         updateLED(SystemMode::TIMER, g_state.previewMode);
+        playModeSwitchSound();
         return;
     } else if (event == ButtonEvent::DOUBLE_CLICK) {
-        // Enter sync mode - reopen serial
-        switchModeStartTime = 0;
-        previewActive = false;
+        // Enter sync mode
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        Serial.begin(115200);
-        delay(100);
-        Serial.println("Double-click → SYNC MODE");
-        Serial.println("=== SYNC MODE ===");
-        Serial.println("Waiting for PING (15s timeout)...");
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
     
-    // Check for 5 second timeout - auto-switch to selected/previewed mode
-    if (millis() - switchModeStartTime >= 5000) {
-        switchModeStartTime = 0;
-        if (previewActive) {
+    // Check for 4 second timeout - auto-switch to selected/previewed mode
+    if (millis() - g_state.switchActionTime >= 4000) {
+        if (g_state.switchPreviewActive) {
             // Switch to previewed mode
-            previewActive = false;
+            g_state.switchPreviewActive = false;
             g_timerState.mode = g_state.previewMode;
             g_timerState.reset(g_settings);
             if (g_state.completedFromMode == TimerMode::WORK && g_timerState.mode != TimerMode::WORK) {
@@ -241,26 +228,49 @@ void handleSwitchMode() {
             }
             saveTimerState(g_timerState);
             g_state.systemMode = SystemMode::TIMER;
+            g_state.modeStartTime = millis();
             updateLED(SystemMode::TIMER, g_timerState.mode);
             playTimerStartSound(g_timerState.mode, g_settings);
         } else {
             // No preview - auto-switch to next mode
-            previewActive = false;
+            g_state.switchPreviewActive = false;
+            g_state.systemMode = SystemMode::TIMER;
+            g_state.modeStartTime = millis();
             switchToNextModeFromCompleted();
         }
     }
 }
 
 void handleSyncMode() {
+    static unsigned long pongWaitStartTime = 0;
+    
     // Check for timeout
     if (!g_state.syncPingReceived) {
+        // Phase 1: Waiting for PING
         unsigned long elapsed = (millis() - g_state.modeStartTime) / 1000;
         if (elapsed >= SYNC_TIMEOUT_SECONDS) {
             Serial.println("Sync timeout - switching to WORK mode");
             Serial.flush();
             delay(100);
-            Serial.end();
             // Always switch to WORK mode (phase one) after sync
+            g_timerState.mode = TimerMode::WORK;
+            g_timerState.reset(g_settings);
+            saveTimerState(g_timerState);
+            g_state.systemMode = SystemMode::TIMER;
+            updateLED(SystemMode::TIMER, g_timerState.mode);
+            playTimerStartSound(g_timerState.mode, g_settings);
+            return;
+        }
+    } else {
+        // Phase 2: PING received, waiting for PONG - 30 second timeout
+        if (pongWaitStartTime == 0) {
+            pongWaitStartTime = millis();
+        }
+        unsigned long pongElapsed = (millis() - pongWaitStartTime) / 1000;
+        if (pongElapsed >= 30) {
+            Serial.println("PONG timeout - switching to WORK mode");
+            Serial.flush();
+            pongWaitStartTime = 0;
             g_timerState.mode = TimerMode::WORK;
             g_timerState.reset(g_settings);
             saveTimerState(g_timerState);
@@ -274,27 +284,12 @@ void handleSyncMode() {
     // Process serial commands
     if (processSerialCommands(g_settings, g_timerState, g_state.syncPingReceived)) {
         // PONG received - restart device to hide COM port and start fresh
+        pongWaitStartTime = 0;
         Serial.println("Restarting device...");
         Serial.flush();
         delay(100);
         ESP.restart();
     }
-}
-
-void switchToNextMode() {
-    TimerMode oldMode = g_timerState.mode;
-    g_timerState.mode = getNextTimerMode(g_timerState, g_settings);
-    g_timerState.reset(g_settings);
-    
-    if (oldMode == TimerMode::WORK) {
-        g_timerState.completedWorkSessions++;
-    } else if (oldMode == TimerMode::LONG_BREAK) {
-        g_timerState.completedWorkSessions = 0;
-    }
-    
-    saveTimerState(g_timerState);
-    updateLED(SystemMode::TIMER, g_timerState.mode);
-    playChime();
 }
 
 void switchToNextModeFromCompleted() {

@@ -65,4 +65,7 @@ struct GlobalState {
     bool syncPingReceived = false;
     TimerMode completedFromMode = TimerMode::WORK;
     TimerMode previewMode = TimerMode::WORK;  // For SWITCH mode preview
+    unsigned long switchEntryTime = 0;        // When we entered SWITCH mode (for reset detection)
+    unsigned long switchActionTime = 0;       // Last user action in SWITCH mode (for timeout)
+    bool switchPreviewActive = false;         // SWITCH mode preview state
 };

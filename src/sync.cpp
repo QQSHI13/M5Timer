@@ -18,6 +18,13 @@ void sendSettings(const Settings& settings) {
 bool processSerialCommands(Settings& settings, TimerState& timerState, bool& pingReceived) {
     while (Serial.available()) {
         char c = Serial.read();
+        
+        // Prevent buffer overflow - limit to 256 chars
+        if (c != '\n' && c != '\r' && buffer.length() >= 256) {
+            buffer = "";  // Reset buffer if it gets too long
+            continue;
+        }
+        
         if (c == '\n') {
             buffer.trim();
             if (buffer.length() > 0) {

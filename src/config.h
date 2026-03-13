@@ -17,8 +17,8 @@
 #define DOUBLE_CLICK_MS 400
 
 // ============== TIMER CONFIG ==============
-#define INITIAL_MODE_SECONDS  5
-#define SYNC_TIMEOUT_SECONDS  15
+#define INITIAL_MODE_SECONDS  4
+#define SYNC_TIMEOUT_SECONDS  10
 
 // ============== ENUMS ==============
 enum class SystemMode {
@@ -42,7 +42,8 @@ enum class ButtonEvent {
 
 enum class SoundType {
     COUNTDOWN,
-    WORK_END,      // Ascending C5-E5-G5 (523→659→784 Hz)
-    BREAK_END,     // Descending G5-E5-C5 (784→659→523 Hz)
-    CHIME          // Default pleasant chime
+    WORK_END,      // Triumphant fanfare C5-E5-G5-C6
+    BREAK_END,     // Gentle descending G5-E5-C5-G4
+    CHIME,         // Nice bell chime E5-G5-B5
+    MODE_SWITCH    // Quick blip for mode cycling
 };
