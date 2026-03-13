@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <I2C_BM8563.h>
+#include <esp_sleep.h>
 
 #include "config.h"
 #include "types.h"
@@ -28,6 +29,7 @@ void handleTimerMode();
 void handleSwitchMode();
 void handleSyncMode();
 void switchToNextModeFromCompleted();
+void enterLightSleep(uint32_t sleepMs);
 
 // ============== SETUP ==============
 void setup() {
@@ -89,7 +91,6 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        Serial.begin(115200);
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
@@ -175,6 +176,12 @@ void handleTimerMode() {
     if (elapsedSeconds > 0 || g_timerState.remainingSeconds == 0) {
         saveTimerState(g_timerState);
     }
+    
+    // Light sleep during timer - wake on button press
+    if (!isBuzzerActive() && g_timerState.isRunning && g_timerState.remainingSeconds > 0) {
+        uint32_t sleepMs = (uint32_t)g_timerState.remainingSeconds * 1000;
+        enterLightSleep(sleepMs);
+    }
 }
 
 void handleSwitchMode() {
@@ -221,7 +228,6 @@ void handleSwitchMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        Serial.begin(115200);
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
@@ -318,4 +324,17 @@ void switchToNextModeFromCompleted() {
     saveTimerState(g_timerState);
     updateLED(SystemMode::TIMER, g_timerState.mode);
     playTimerStartSound(newMode, g_settings);
+}
+
+// ============== POWER MANAGEMENT ==============
+void enterLightSleep(uint32_t sleepMs) {
+    if (sleepMs == 0) return;
+    
+    // Configure GPIO wakeup for button (active LOW) - already enabled in setupButton()
+    // Just ensure it's enabled before sleep
+    esp_sleep_enable_gpio_wakeup();
+    
+    // Use M5.Power.lightSleep which is optimized for ESP32-S3 PMIC
+    // This maintains RAM and wakes on button press or timeout
+    M5.Power.lightSleep(sleepMs);
 }
