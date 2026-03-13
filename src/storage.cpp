@@ -10,8 +10,8 @@ void Settings::load(Preferences& prefs) {
     longBreakMinutes = prefs.getUChar("longBreakMin", 15);
     workSessionsBeforeLongBreak = prefs.getUChar("sessions", 4);
     soundEnabled = prefs.getBool("sound", true);
-    ledBrightness = prefs.getUChar("ledBright", 24);
-    buzzerVolume = prefs.getUChar("buzzVol", 64);
+    ledBrightness = prefs.getUChar("ledBright", 16);
+    buzzerVolume = prefs.getUChar("buzzVol", 24);
 }
 
 void Settings::save(Preferences& prefs) const {
@@ -30,8 +30,8 @@ void Settings::reset() {
     longBreakMinutes = 15;
     workSessionsBeforeLongBreak = 4;
     soundEnabled = true;
-    ledBrightness = 24;
-    buzzerVolume = 64;
+    ledBrightness = 16;
+    buzzerVolume = 24;
 }
 
 String Settings::toString() const {

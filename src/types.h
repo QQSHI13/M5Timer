@@ -11,8 +11,8 @@ struct Settings {
     uint8_t longBreakMinutes = 15;
     uint8_t workSessionsBeforeLongBreak = 4;
     bool soundEnabled = true;
-    uint8_t ledBrightness = 24;     // 0-255
-    uint8_t buzzerVolume = 64;      // 0-255 (duty cycle)
+    uint8_t ledBrightness = 16;     // 0-255
+    uint8_t buzzerVolume = 24;      // 0-255 (duty cycle)
     
     void load(Preferences& prefs);
     void save(Preferences& prefs) const;
