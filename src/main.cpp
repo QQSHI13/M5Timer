@@ -79,9 +79,13 @@ void handleInitialMode() {
     unsigned long now = millis();
     unsigned long elapsed = (now - g_state.modeStartTime) / 1000;
     
+    // Ensure serial is disabled in INITIAL mode
+    Serial.end();
+    
     // Check for double-click to enter sync mode
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::DOUBLE_CLICK) {
+        Serial.begin(115200);  // Enable serial for SYNC mode
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -180,6 +184,9 @@ void handleTimerMode() {
 }
 
 void handleSwitchMode() {
+    // Ensure serial is disabled in SWITCH mode
+    Serial.end();
+    
     // Detect re-entry into SWITCH mode by checking if modeStartTime changed
     if (g_state.switchEntryTime != g_state.modeStartTime) {
         // First call after entering SWITCH mode - reset state
@@ -192,14 +199,22 @@ void handleSwitchMode() {
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::SINGLE_CLICK) {
         if (!g_state.switchPreviewActive) {
-            // First click - start preview with next mode
+            // First click - start preview with next mode (cycle through all modes)
             g_state.switchPreviewActive = true;
             g_state.previewMode = getNextTimerMode(g_timerState, g_settings);
         } else {
-            // Subsequent click - cycle to next mode
-            TimerState tempState = g_timerState;
-            tempState.mode = g_state.previewMode;
-            g_state.previewMode = getNextTimerMode(tempState, g_settings);
+            // Subsequent click - cycle through ALL modes: WORK -> BREAK -> LONG_BREAK -> WORK
+            switch (g_state.previewMode) {
+                case TimerMode::WORK:
+                    g_state.previewMode = TimerMode::BREAK;
+                    break;
+                case TimerMode::BREAK:
+                    g_state.previewMode = TimerMode::LONG_BREAK;
+                    break;
+                case TimerMode::LONG_BREAK:
+                    g_state.previewMode = TimerMode::WORK;
+                    break;
+            }
         }
         // Reset timer, show preview, and play sound
         g_state.switchActionTime = millis();
@@ -207,7 +222,8 @@ void handleSwitchMode() {
         playModeSwitchSound();
         return;
     } else if (event == ButtonEvent::DOUBLE_CLICK) {
-        // Enter sync mode
+        // Enter sync mode - enable serial first
+        Serial.begin(115200);
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
