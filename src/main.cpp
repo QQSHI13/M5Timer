@@ -31,12 +31,7 @@ void switchToNextModeFromCompleted();
 
 // ============== SETUP ==============
 void setup() {
-    Serial.begin(115200);
-    delay(100);
-    
-    Serial.println("\n=== M5Capsule Pomodoro ===");
-    
-    // Setup hardware
+    // Setup hardware (serial not started - only used in SYNC mode)
     setupPower();
     setupLED();
     setupBuzzer();
@@ -115,11 +110,6 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::TIMER;
         updateLED(SystemMode::TIMER, g_timerState.mode);
         playTimerStartSound(g_timerState.mode, g_settings);
-        
-        // Close serial to save power
-        Serial.flush();
-        delay(100);
-        Serial.end();
     }
 }
 
