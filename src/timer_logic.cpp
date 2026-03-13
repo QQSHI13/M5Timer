@@ -51,7 +51,6 @@ String timerModeToString(TimerMode mode) {
         case TimerMode::WORK: return "WORK";
         case TimerMode::BREAK: return "BREAK";
         case TimerMode::LONG_BREAK: return "LONG_BREAK";
-        case TimerMode::COMPLETED: return "COMPLETED";
         default: return "UNKNOWN";
     }
 }

@@ -24,14 +24,14 @@
 enum class SystemMode {
     INITIAL,
     TIMER,
+    SWITCH,
     SYNC
 };
 
 enum class TimerMode {
     WORK,
     BREAK,
-    LONG_BREAK,
-    COMPLETED
+    LONG_BREAK
 };
 
 enum class ButtonEvent {

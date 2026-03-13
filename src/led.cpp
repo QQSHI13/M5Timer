@@ -16,6 +16,10 @@ void updateLED(SystemMode systemMode, TimerMode timerMode) {
             leds[0] = CRGB::White;
             break;
             
+        case SystemMode::SWITCH:
+            leds[0] = CRGB::White;  // White LED for switch mode
+            break;
+            
         case SystemMode::SYNC:
             leds[0] = CRGB(255, 80, 0);  // Red-orange
             break;
@@ -30,9 +34,6 @@ void updateLED(SystemMode systemMode, TimerMode timerMode) {
                     break;
                 case TimerMode::LONG_BREAK:
                     leds[0] = CRGB::Blue;
-                    break;
-                case TimerMode::COMPLETED:
-                    leds[0] = CRGB::White;
                     break;
             }
             break;
