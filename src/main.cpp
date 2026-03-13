@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <I2C_BM8563.h>
-#include <USB.h>
 
 #include "config.h"
 #include "types.h"
@@ -87,8 +86,7 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
-        USB.begin();           // Start USB peripheral
-        Serial.begin(115200);  // Start CDC
+        Serial.begin(115200);
         delay(100);
         Serial.println("=== SYNC MODE ===");
         Serial.println("Waiting for PING (15s timeout)...");
@@ -262,7 +260,6 @@ void handleSyncMode() {
             Serial.flush();
             delay(100);
             Serial.end();
-            USB.end();
             // Always switch to WORK mode (phase one) after sync
             g_timerState.mode = TimerMode::WORK;
             g_timerState.reset(g_settings);
@@ -280,7 +277,6 @@ void handleSyncMode() {
         Serial.flush();
         delay(100);
         Serial.end();
-        USB.end();
         // Always switch to WORK mode (phase one) after sync
         g_timerState.mode = TimerMode::WORK;
         g_timerState.reset(g_settings);
