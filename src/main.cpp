@@ -256,32 +256,34 @@ void handleSyncMode() {
     if (!g_state.syncPingReceived) {
         unsigned long elapsed = (millis() - g_state.modeStartTime) / 1000;
         if (elapsed >= SYNC_TIMEOUT_SECONDS) {
-            Serial.println("Sync timeout - returning to TIMER MODE");
+            Serial.println("Sync timeout - switching to WORK mode");
             Serial.flush();
             delay(100);
             Serial.end();
+            // Always switch to WORK mode (phase one) after sync
+            g_timerState.mode = TimerMode::WORK;
+            g_timerState.reset(g_settings);
+            saveTimerState(g_timerState);
             g_state.systemMode = SystemMode::TIMER;
-            if (!g_timerState.isRunning) {
-                g_timerState.reset(g_settings);
-            }
             updateLED(SystemMode::TIMER, g_timerState.mode);
-            playChime();  // Sound on sync exit
+            playTimerStartSound(g_timerState.mode, g_settings);
             return;
         }
     }
     
     // Process serial commands
     if (processSerialCommands(g_settings, g_timerState, g_state.syncPingReceived)) {
-        // PONG received - transition to timer mode
-        g_state.systemMode = SystemMode::TIMER;
+        // PONG received - transition to WORK mode (phase one)
         Serial.flush();
         delay(100);
         Serial.end();
-        if (!g_timerState.isRunning) {
-            g_timerState.reset(g_settings);
-        }
+        // Always switch to WORK mode (phase one) after sync
+        g_timerState.mode = TimerMode::WORK;
+        g_timerState.reset(g_settings);
+        saveTimerState(g_timerState);
+        g_state.systemMode = SystemMode::TIMER;
         updateLED(SystemMode::TIMER, g_timerState.mode);
-        playChime();  // Sound on sync exit
+        playTimerStartSound(g_timerState.mode, g_settings);
     }
 }
 
