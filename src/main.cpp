@@ -273,17 +273,11 @@ void handleSyncMode() {
     
     // Process serial commands
     if (processSerialCommands(g_settings, g_timerState, g_state.syncPingReceived)) {
-        // PONG received - transition to WORK mode (phase one)
+        // PONG received - restart device to hide COM port and start fresh
+        Serial.println("Restarting device...");
         Serial.flush();
         delay(100);
-        Serial.end();
-        // Always switch to WORK mode (phase one) after sync
-        g_timerState.mode = TimerMode::WORK;
-        g_timerState.reset(g_settings);
-        saveTimerState(g_timerState);
-        g_state.systemMode = SystemMode::TIMER;
-        updateLED(SystemMode::TIMER, g_timerState.mode);
-        playTimerStartSound(g_timerState.mode, g_settings);
+        ESP.restart();
     }
 }
 
