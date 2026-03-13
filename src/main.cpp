@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <I2C_BM8563.h>
-#include <esp_sleep.h>
 
 #include "config.h"
 #include "types.h"
@@ -330,11 +329,6 @@ void switchToNextModeFromCompleted() {
 void enterLightSleep(uint32_t sleepMs) {
     if (sleepMs == 0) return;
     
-    // Configure GPIO wakeup for button (active LOW) - already enabled in setupButton()
-    // Just ensure it's enabled before sleep
-    esp_sleep_enable_gpio_wakeup();
-    
-    // Use M5.Power.lightSleep which is optimized for ESP32-S3 PMIC
-    // This maintains RAM and wakes on button press or timeout
+    // Use M5.Power.lightSleep - handles GPIO wakeup automatically
     M5.Power.lightSleep(sleepMs);
 }
