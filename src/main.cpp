@@ -73,6 +73,9 @@ void loop() {
             handleSyncMode();
             break;
     }
+    
+    // Small delay to allow serial processing and reduce CPU usage
+    delay(10);
 }
 
 // ============== MODE TRANSITION HANDLERS ==============
@@ -89,6 +92,7 @@ void handleInitialMode() {
         Serial.begin(115200);  // Enable serial for SYNC mode
         delay(100);  // Wait for serial to stabilize
         Serial.flush();
+        Serial.println("Entering SYNC mode");
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -228,6 +232,7 @@ void handleSwitchMode() {
         Serial.begin(115200);
         delay(100);  // Wait for serial to stabilize
         Serial.flush();
+        Serial.println("Entering SYNC mode");
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -311,6 +316,10 @@ void handleSyncMode() {
         delay(100);
         ESP.restart();
     }
+    
+    // Small delay for serial processing
+    delay(10);
+}
 }
 
 void switchToNextModeFromCompleted() {
