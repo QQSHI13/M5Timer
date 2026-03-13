@@ -85,6 +85,7 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
+        Serial.begin(115200);
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
@@ -210,6 +211,7 @@ void handleSwitchMode() {
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
+        Serial.begin(115200);
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
