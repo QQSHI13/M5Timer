@@ -93,6 +93,7 @@ void handleInitialMode() {
         delay(100);  // Wait for serial to stabilize
         Serial.flush();
         Serial.println("Entering SYNC mode");
+        playChime();  // Audio feedback
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -233,6 +234,7 @@ void handleSwitchMode() {
         delay(100);  // Wait for serial to stabilize
         Serial.flush();
         Serial.println("Entering SYNC mode");
+        playChime();  // Audio feedback
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
