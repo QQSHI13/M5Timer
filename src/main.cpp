@@ -322,7 +322,6 @@ void handleSyncMode() {
     // Small delay for serial processing
     delay(10);
 }
-}
 
 void switchToNextModeFromCompleted() {
     TimerMode newMode = getNextModeFromCompleted(g_state.completedFromMode, g_timerState, g_settings);
