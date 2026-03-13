@@ -64,4 +64,5 @@ struct GlobalState {
     unsigned long modeStartTime = 0;
     bool syncPingReceived = false;
     TimerMode completedFromMode = TimerMode::WORK;
+    TimerMode previewMode = TimerMode::WORK;  // For SWITCH mode preview
 };

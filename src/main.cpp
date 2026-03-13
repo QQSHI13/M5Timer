@@ -185,22 +185,35 @@ void handleTimerMode() {
 
 void handleSwitchMode() {
     static unsigned long switchModeStartTime = 0;
+    static bool previewActive = false;
     
-    // Initialize switch mode timer on first entry
+    // Initialize switch mode timer and preview on first entry
     if (switchModeStartTime == 0) {
         switchModeStartTime = millis();
+        previewActive = false;
     }
     
     // Check for button events in switch mode
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::SINGLE_CLICK) {
-        // Change mode
-        switchModeStartTime = 0;
-        switchToNextMode();
+        if (!previewActive) {
+            // First click - start preview with next mode
+            previewActive = true;
+            g_state.previewMode = getNextTimerMode(g_timerState, g_settings);
+        } else {
+            // Subsequent click - cycle to next mode
+            TimerState tempState = g_timerState;
+            tempState.mode = g_state.previewMode;
+            g_state.previewMode = getNextTimerMode(tempState, g_settings);
+        }
+        // Reset timer and show preview
+        switchModeStartTime = millis();
+        updateLED(SystemMode::TIMER, g_state.previewMode);
         return;
     } else if (event == ButtonEvent::DOUBLE_CLICK) {
         // Enter sync mode - reopen serial
         switchModeStartTime = 0;
+        previewActive = false;
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -213,10 +226,28 @@ void handleSwitchMode() {
         return;
     }
     
-    // Check for 5 second timeout - auto-switch to next mode
+    // Check for 5 second timeout - auto-switch to selected/previewed mode
     if (millis() - switchModeStartTime >= 5000) {
         switchModeStartTime = 0;
-        switchToNextModeFromCompleted();
+        if (previewActive) {
+            // Switch to previewed mode
+            previewActive = false;
+            g_timerState.mode = g_state.previewMode;
+            g_timerState.reset(g_settings);
+            if (g_state.completedFromMode == TimerMode::WORK && g_timerState.mode != TimerMode::WORK) {
+                g_timerState.completedWorkSessions++;
+            } else if (g_state.completedFromMode == TimerMode::LONG_BREAK && g_timerState.mode == TimerMode::WORK) {
+                g_timerState.completedWorkSessions = 0;
+            }
+            saveTimerState(g_timerState);
+            g_state.systemMode = SystemMode::TIMER;
+            updateLED(SystemMode::TIMER, g_timerState.mode);
+            playTimerStartSound(g_timerState.mode, g_settings);
+        } else {
+            // No preview - auto-switch to next mode
+            previewActive = false;
+            switchToNextModeFromCompleted();
+        }
     }
 }
 
