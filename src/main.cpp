@@ -175,12 +175,6 @@ void handleTimerMode() {
     if (elapsedSeconds > 0 || g_timerState.remainingSeconds == 0) {
         saveTimerState(g_timerState);
     }
-    
-    // Light sleep
-    if (!isBuzzerActive() && g_timerState.isRunning) {
-        M5.Power.lightSleep(1000000);
-        delay(10);
-    }
 }
 
 void handleSwitchMode() {
