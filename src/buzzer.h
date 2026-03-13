@@ -10,6 +10,7 @@ void playSound(SoundType type);
 void playTimerStartSound(TimerMode mode, const Settings& settings);
 void playChime();
 void playModeSwitchSound();
+void playResetSound();
 void playCountdownBeep(int remaining);
 void setBuzzerSettings(const Settings& settings);
 bool isBuzzerActive();

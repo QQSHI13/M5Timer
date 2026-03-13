@@ -1,5 +1,6 @@
 #include "sync.h"
 #include "storage.h"
+#include "buzzer.h"
 
 static String buffer = "";
 
@@ -61,6 +62,7 @@ bool processSerialCommands(Settings& settings, TimerState& timerState, bool& pin
                     saveSettings(settings);
                     timerState.reset(settings);
                     saveTimerState(timerState);
+                    playResetSound();
                     Serial.println("Settings reset to defaults");
                 }
             }

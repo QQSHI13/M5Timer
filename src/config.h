@@ -48,5 +48,6 @@ enum class SoundType {
     WORK_END,      // Triumphant fanfare C5-E5-G5-C6
     BREAK_END,     // Gentle descending G5-E5-C5-G4
     CHIME,         // Nice bell chime E5-G5-B5
-    MODE_SWITCH    // Quick blip for mode cycling
+    MODE_SWITCH,   // Quick blip for mode cycling
+    RESET_SOUND    // Reset confirmation sound
 };

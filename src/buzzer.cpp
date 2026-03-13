@@ -17,13 +17,13 @@ void setBuzzerSettings(const Settings& settings) {
 // Plays tones sequentially from queue (non-blocking)
 void updateBuzzer() {
     if (!buzzerState.active) return;
-    
+
     unsigned long now = millis();
-    
+
     // Check if current tone is done
     if (now - buzzerState.toneStartTime >= buzzerState.currentTone.durationMs) {
         buzzerState.queueIndex++;
-        
+
         if (buzzerState.queueIndex < buzzerState.queueSize) {
             // Play next tone in queue
             buzzerState.currentTone = buzzerState.queue[buzzerState.queueIndex];
@@ -47,20 +47,20 @@ void playToneSequence(const Tone* tones, uint8_t count) {
         // Already playing, ignore new request
         return;
     }
-    
+
     if (count == 0 || count > 4) return;
-    
+
     buzzerState.queueSize = count;
     buzzerState.queueIndex = 0;
-    
+
     for (uint8_t i = 0; i < count; i++) {
         buzzerState.queue[i] = tones[i];
     }
-    
+
     buzzerState.currentTone = buzzerState.queue[0];
     buzzerState.toneStartTime = millis();
     buzzerState.active = true;
-    
+
     ledcAttachPin(BUZZER_PIN, 0);
     ledcWriteTone(0, buzzerState.currentTone.frequency);
     ledcWrite(0, BUZZER_VOLUME);  // Apply volume (duty cycle)
@@ -68,10 +68,10 @@ void playToneSequence(const Tone* tones, uint8_t count) {
 
 void playSound(SoundType type) {
     if (!settingsPtr || !settingsPtr->soundEnabled) return;
-    
+
     Tone tones[5];
     uint8_t count = 0;
-    
+
     switch (type) {
         case SoundType::WORK_END:
             // Triumphant fanfare: C5-E5-G5-C6 (523→659→784→1047 Hz)
@@ -81,7 +81,7 @@ void playSound(SoundType type) {
             tones[3] = {1047, 350};
             count = 4;
             break;
-            
+
         case SoundType::BREAK_END:
             // Gentle descending: G5-E5-C5-G4 (784→659→523→392 Hz)
             tones[0] = {784, 150};
@@ -90,7 +90,7 @@ void playSound(SoundType type) {
             tones[3] = {392, 300};
             count = 4;
             break;
-            
+
         case SoundType::CHIME:
             // Nice bell chime: E5-G5-B5
             tones[0] = {659, 100};
@@ -98,13 +98,20 @@ void playSound(SoundType type) {
             tones[2] = {988, 180};
             count = 3;
             break;
-            
+
         case SoundType::MODE_SWITCH:
             // Quick blip for mode cycling: D5 short
             tones[0] = {587, 60};
             count = 1;
             break;
-            
+
+        case SoundType::RESET_SOUND:
+            // Reset sound: double beep
+            tones[0] = {523, 80};
+            tones[1] = {523, 80};
+            count = 2;
+            break;
+
         case SoundType::COUNTDOWN:
         default:
             // Short tick
@@ -112,7 +119,7 @@ void playSound(SoundType type) {
             count = 1;
             break;
     }
-    
+
     playToneSequence(tones, count);
 }
 
@@ -121,7 +128,7 @@ void playSound(SoundType type) {
 // - Break starts (work ended) -> play work end sound (ascending, triumphant)
 void playTimerStartSound(TimerMode mode, const Settings& settings) {
     if (!settings.soundEnabled) return;
-    
+
     switch (mode) {
         case TimerMode::WORK:
             // Work starts = break just ended -> gentle descending sound
@@ -147,9 +154,14 @@ void playModeSwitchSound() {
     playSound(SoundType::MODE_SWITCH);
 }
 
+void playResetSound() {
+    if (!settingsPtr || !settingsPtr->soundEnabled) return;
+    playSound(SoundType::RESET_SOUND);
+}
+
 void playCountdownBeep(int remaining) {
     if (!settingsPtr || !settingsPtr->soundEnabled) return;
-    
+
     if (remaining > 0) {
         // Short tick for countdown
         Tone tick = {880, 50};

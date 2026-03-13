@@ -90,10 +90,8 @@ void handleInitialMode() {
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::DOUBLE_CLICK) {
         Serial.begin(115200);  // Enable serial for SYNC mode
-        delay(100);  // Wait for serial to stabilize
-        Serial.flush();
         Serial.println("Entering SYNC mode");
-        playChime();  // Audio feedback
+        playModeSwitchSound();  // Audio feedback
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -231,10 +229,8 @@ void handleSwitchMode() {
     } else if (event == ButtonEvent::DOUBLE_CLICK) {
         // Enter sync mode - enable serial first
         Serial.begin(115200);
-        delay(100);  // Wait for serial to stabilize
-        Serial.flush();
         Serial.println("Entering SYNC mode");
-        playChime();  // Audio feedback
+        playModeSwitchSound();  // Audio feedback
         g_state.systemMode = SystemMode::SYNC;
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
@@ -278,8 +274,6 @@ void handleSyncMode() {
         unsigned long elapsed = (millis() - g_state.modeStartTime) / 1000;
         if (elapsed >= SYNC_TIMEOUT_SECONDS) {
             Serial.println("Sync timeout - switching to WORK mode");
-            Serial.flush();
-            delay(100);
             // Always switch to WORK mode (phase one) after sync
             g_timerState.mode = TimerMode::WORK;
             g_timerState.reset(g_settings);
@@ -297,7 +291,6 @@ void handleSyncMode() {
         unsigned long pongElapsed = (millis() - pongWaitStartTime) / 1000;
         if (pongElapsed >= 30) {
             Serial.println("PONG timeout - switching to WORK mode");
-            Serial.flush();
             pongWaitStartTime = 0;
             g_timerState.mode = TimerMode::WORK;
             g_timerState.reset(g_settings);
@@ -314,13 +307,8 @@ void handleSyncMode() {
         // PONG received - restart device to hide COM port and start fresh
         pongWaitStartTime = 0;
         Serial.println("Restarting device...");
-        Serial.flush();
-        delay(100);
         ESP.restart();
     }
-    
-    // Small delay for serial processing
-    delay(10);
 }
 
 void switchToNextModeFromCompleted() {
