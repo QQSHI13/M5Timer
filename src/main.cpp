@@ -29,6 +29,7 @@ void handleSwitchMode();
 void handleSyncMode();
 void switchToNextModeFromCompleted();
 void enterLightSleep(uint32_t sleepMs);
+void setBuzzerVolume(uint8_t volume);
 
 // ============== SETUP ==============
 void setup() {
@@ -43,6 +44,10 @@ void setup() {
     loadSettings(g_settings);
     loadTimerState(g_timerState);
     setBuzzerSettings(g_settings);
+    
+    // Apply initial LED brightness and buzzer volume from settings
+    setLEDBrightness(g_settings.ledBrightness);
+    setBuzzerVolume(g_settings.buzzerVolume);
     
     // Enter initial mode
     g_state.systemMode = SystemMode::INITIAL;

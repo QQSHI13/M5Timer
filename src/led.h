@@ -5,3 +5,4 @@
 
 void setupLED();
 void updateLED(SystemMode systemMode, TimerMode timerMode);
+void setLEDBrightness(uint8_t brightness);

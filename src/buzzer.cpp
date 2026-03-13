@@ -2,6 +2,7 @@
 
 static BuzzerState buzzerState;
 static const Settings* settingsPtr = nullptr;
+static uint8_t currentVolume = BUZZER_VOLUME;  // Configurable volume
 
 void setupBuzzer() {
     pinMode(BUZZER_PIN, OUTPUT);
@@ -12,6 +13,11 @@ void setupBuzzer() {
 
 void setBuzzerSettings(const Settings& settings) {
     settingsPtr = &settings;
+    currentVolume = settings.buzzerVolume;  // Update volume from settings
+}
+
+void setBuzzerVolume(uint8_t volume) {
+    currentVolume = volume;
 }
 
 // Plays tones sequentially from queue (non-blocking)
@@ -29,7 +35,7 @@ void updateBuzzer() {
             buzzerState.currentTone = buzzerState.queue[buzzerState.queueIndex];
             buzzerState.toneStartTime = now;
             ledcWriteTone(0, buzzerState.currentTone.frequency);
-            ledcWrite(0, BUZZER_VOLUME);  // Apply volume (duty cycle)
+            ledcWrite(0, currentVolume);  // Apply configurable volume
         } else {
             // Queue finished
             ledcDetachPin(BUZZER_PIN);
@@ -60,10 +66,10 @@ void playToneSequence(const Tone* tones, uint8_t count) {
     buzzerState.currentTone = buzzerState.queue[0];
     buzzerState.toneStartTime = millis();
     buzzerState.active = true;
-
+    
     ledcAttachPin(BUZZER_PIN, 0);
     ledcWriteTone(0, buzzerState.currentTone.frequency);
-    ledcWrite(0, BUZZER_VOLUME);  // Apply volume (duty cycle)
+    ledcWrite(0, currentVolume);  // Apply configurable volume
 }
 
 void playSound(SoundType type) {

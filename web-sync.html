@@ -72,9 +72,34 @@
             color: #c9d1d9;
             font-size: 16px;
         }
-        input[type="number"]:focus {
+        input[type="number"]:focus, input[type="range"]:focus {
             outline: none;
             border-color: #58a6ff;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #58a6ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .slider-value {
+            display: inline-block;
+            min-width: 40px;
+            text-align: right;
+            color: #58a6ff;
+            font-weight: 500;
         }
         .form-row {
             display: grid;
@@ -210,6 +235,16 @@
             <label for="soundEnabled">Enable buzzer sounds</label>
         </div>
         
+        <div class="form-group">
+            <label for="ledBrightness">LED Brightness: <span class="slider-value" id="ledValue">24</span></label>
+            <input type="range" id="ledBrightness" min="0" max="255" value="24">
+        </div>
+        
+        <div class="form-group">
+            <label for="buzzerVolume">Buzzer Volume: <span class="slider-value" id="volValue">64</span></label>
+            <input type="range" id="buzzerVolume" min="0" max="255" value="64">
+        </div>
+        
         <button id="connectBtn">Connect</button>
         <button id="syncBtn" class="secondary" disabled>Send Settings (SYNC)</button>
         <button id="getBtn" class="secondary" disabled>Load from Device (GET)</button>
@@ -260,6 +295,14 @@
             logEl.appendChild(line);
             logEl.scrollTop = logEl.scrollHeight;
         }
+
+        // Slider value display updates
+        document.getElementById('ledBrightness').addEventListener('input', function() {
+            document.getElementById('ledValue').textContent = this.value;
+        });
+        document.getElementById('buzzerVolume').addEventListener('input', function() {
+            document.getElementById('volValue').textContent = this.value;
+        });
         
         async function connect() {
             try {
@@ -333,8 +376,10 @@
             const longBrk = document.getElementById('longBreakMinutes').value;
             const sessions = document.getElementById('workSessions').value;
             const sound = document.getElementById('soundEnabled').checked ? 1 : 0;
+            const ledBright = document.getElementById('ledBrightness').value;
+            const buzzVol = document.getElementById('buzzerVolume').value;
             
-            const command = `SYNC:work=${work},break=${brk},longBreak=${longBrk},sessions=${sessions},sound=${sound}`;
+            const command = `SYNC:work=${work},break=${brk},longBreak=${longBrk},sessions=${sessions},sound=${sound},ledBright=${ledBright},buzzVol=${buzzVol}`;
             await sendCommand(command);
             statusEl.textContent = 'Settings sent. Device stays in sync mode.';
         }
@@ -431,7 +476,7 @@
         }
         
         function parseSettings(str) {
-            // Parse work=25,break=5,longBreak=15,sessions=4,sound=1
+            // Parse work=25,break=5,longBreak=15,sessions=4,sound=1,ledBright=24,buzzVol=64
             const parts = str.split(',');
             for (const part of parts) {
                 const [key, value] = part.split('=');
@@ -450,6 +495,14 @@
                         break;
                     case 'sound':
                         document.getElementById('soundEnabled').checked = parseInt(value) !== 0;
+                        break;
+                    case 'ledBright':
+                        document.getElementById('ledBrightness').value = parseInt(value);
+                        document.getElementById('ledValue').textContent = value;
+                        break;
+                    case 'buzzVol':
+                        document.getElementById('buzzerVolume').value = parseInt(value);
+                        document.getElementById('volValue').textContent = value;
                         break;
                 }
             }

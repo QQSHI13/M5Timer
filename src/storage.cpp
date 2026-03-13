@@ -10,6 +10,8 @@ void Settings::load(Preferences& prefs) {
     longBreakMinutes = prefs.getUChar("longBreakMin", 15);
     workSessionsBeforeLongBreak = prefs.getUChar("sessions", 4);
     soundEnabled = prefs.getBool("sound", true);
+    ledBrightness = prefs.getUChar("ledBright", 24);
+    buzzerVolume = prefs.getUChar("buzzVol", 64);
 }
 
 void Settings::save(Preferences& prefs) const {
@@ -18,6 +20,8 @@ void Settings::save(Preferences& prefs) const {
     prefs.putUChar("longBreakMin", longBreakMinutes);
     prefs.putUChar("sessions", workSessionsBeforeLongBreak);
     prefs.putBool("sound", soundEnabled);
+    prefs.putUChar("ledBright", ledBrightness);
+    prefs.putUChar("buzzVol", buzzerVolume);
 }
 
 void Settings::reset() {
@@ -26,6 +30,8 @@ void Settings::reset() {
     longBreakMinutes = 15;
     workSessionsBeforeLongBreak = 4;
     soundEnabled = true;
+    ledBrightness = 24;
+    buzzerVolume = 64;
 }
 
 String Settings::toString() const {
@@ -33,7 +39,9 @@ String Settings::toString() const {
            ",break=" + breakMinutes +
            ",longBreak=" + longBreakMinutes +
            ",sessions=" + workSessionsBeforeLongBreak +
-           ",sound=" + (soundEnabled ? 1 : 0);
+           ",sound=" + (soundEnabled ? 1 : 0) +
+           ",ledBright=" + ledBrightness +
+           ",buzzVol=" + buzzerVolume;
 }
 
 bool Settings::fromString(const String& str) {
@@ -42,6 +50,8 @@ bool Settings::fromString(const String& str) {
     int longIdx = str.indexOf("longBreak=");
     int sessIdx = str.indexOf("sessions=");
     int soundIdx = str.indexOf("sound=");
+    int ledIdx = str.indexOf("ledBright=");
+    int volIdx = str.indexOf("buzzVol=");
     
     if (workIdx >= 0) {
         int endIdx = str.indexOf(',', workIdx);
@@ -67,6 +77,16 @@ bool Settings::fromString(const String& str) {
         int endIdx = str.indexOf(',', soundIdx);
         if (endIdx < 0) endIdx = str.length();
         soundEnabled = str.substring(soundIdx + 6, endIdx).toInt() != 0;
+    }
+    if (ledIdx >= 0) {
+        int endIdx = str.indexOf(',', ledIdx);
+        if (endIdx < 0) endIdx = str.length();
+        ledBrightness = str.substring(ledIdx + 10, endIdx).toInt();
+    }
+    if (volIdx >= 0) {
+        int endIdx = str.indexOf(',', volIdx);
+        if (endIdx < 0) endIdx = str.length();
+        buzzerVolume = str.substring(volIdx + 8, endIdx).toInt();
     }
     
     return true;

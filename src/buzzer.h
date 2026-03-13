@@ -13,4 +13,5 @@ void playModeSwitchSound();
 void playResetSound();
 void playCountdownBeep(int remaining);
 void setBuzzerSettings(const Settings& settings);
+void setBuzzerVolume(uint8_t volume);
 bool isBuzzerActive();

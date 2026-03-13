@@ -10,6 +10,11 @@ void setupLED() {
     FastLED.show();
 }
 
+void setLEDBrightness(uint8_t brightness) {
+    FastLED.setBrightness(brightness);
+    FastLED.show();
+}
+
 void updateLED(SystemMode systemMode, TimerMode timerMode) {
     switch (systemMode) {
         case SystemMode::INITIAL:

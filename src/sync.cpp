@@ -1,6 +1,7 @@
 #include "sync.h"
 #include "storage.h"
 #include "buzzer.h"
+#include "led.h"
 
 static String buffer = "";
 
@@ -49,6 +50,12 @@ bool processSerialCommands(Settings& settings, TimerState& timerState, bool& pin
                     settings.fromString(data);
                     saveSettings(settings);
                     
+                    // Apply new LED brightness and buzzer volume immediately
+                    extern void setLEDBrightness(uint8_t brightness);
+                    extern void setBuzzerVolume(uint8_t volume);
+                    setLEDBrightness(settings.ledBrightness);
+                    setBuzzerVolume(settings.buzzerVolume);
+                    
                     // Reset timer with new settings if not running
                     if (!timerState.isRunning) {
                         timerState.reset(settings);
@@ -63,6 +70,9 @@ bool processSerialCommands(Settings& settings, TimerState& timerState, bool& pin
                     timerState.reset(settings);
                     saveTimerState(timerState);
                     playResetSound();
+                    // Apply default brightness and volume
+                    setLEDBrightness(settings.ledBrightness);
+                    setBuzzerVolume(settings.buzzerVolume);
                     Serial.println("Settings reset to defaults");
                 }
             }
