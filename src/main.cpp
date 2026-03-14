@@ -33,6 +33,9 @@ void setBuzzerVolume(uint8_t volume);
 
 // ============== SETUP ==============
 void setup() {
+    // Reduce CPU frequency to save power (80MHz is plenty for timer functionality)
+    setCpuFrequencyMhz(80);
+    
     // Setup hardware (serial not started - only used in SYNC mode)
     setupPower();
     setupLED();
