@@ -91,8 +91,12 @@ void handleInitialMode() {
     unsigned long now = millis();
     unsigned long elapsed = (now - g_state.modeStartTime) / 1000;
     
-    // Ensure serial is disabled in INITIAL mode
-    Serial.end();
+    // Ensure serial is disabled in INITIAL mode (only once on entry)
+    static bool serialEnded = false;
+    if (!serialEnded) {
+        Serial.end();
+        serialEnded = true;
+    }
     
     // Check for double-click to enter sync mode
     ButtonEvent event = getButtonEvent();
@@ -126,6 +130,7 @@ void handleInitialMode() {
         g_state.systemMode = SystemMode::TIMER;
         updateLED(SystemMode::TIMER, g_timerState.mode);
         playTimerStartSound(g_timerState.mode, g_settings);
+        serialEnded = false;  // Reset flag for next INITIAL mode entry
     }
 }
 
@@ -197,8 +202,12 @@ void handleTimerMode() {
 }
 
 void handleSwitchMode() {
-    // Ensure serial is disabled in SWITCH mode
-    Serial.end();
+    // Ensure serial is disabled in SWITCH mode (only once on entry)
+    static bool serialEnded = false;
+    if (!serialEnded) {
+        Serial.end();
+        serialEnded = true;
+    }
     
     // Detect re-entry into SWITCH mode by checking if modeStartTime changed
     if (g_state.switchEntryTime != g_state.modeStartTime) {
@@ -243,6 +252,7 @@ void handleSwitchMode() {
         g_state.modeStartTime = millis();
         g_state.syncPingReceived = false;
         updateLED(SystemMode::SYNC, TimerMode::WORK);
+        serialEnded = false;  // Reset flag for next SWITCH mode entry
         return;
     }
     
@@ -263,12 +273,14 @@ void handleSwitchMode() {
             g_state.modeStartTime = millis();
             updateLED(SystemMode::TIMER, g_timerState.mode);
             playTimerStartSound(g_timerState.mode, g_settings);
+            serialEnded = false;  // Reset flag for next SWITCH mode entry
         } else {
             // No preview - auto-switch to next mode
             g_state.switchPreviewActive = false;
             g_state.systemMode = SystemMode::TIMER;
             g_state.modeStartTime = millis();
             switchToNextModeFromCompleted();
+            serialEnded = false;  // Reset flag for next SWITCH mode entry
         }
     }
 }

@@ -56,22 +56,26 @@ bool Settings::fromString(const String& str) {
     if (workIdx >= 0) {
         int endIdx = str.indexOf(',', workIdx);
         if (endIdx < 0) endIdx = str.length();
-        workMinutes = str.substring(workIdx + 5, endIdx).toInt();
+        int val = str.substring(workIdx + 5, endIdx).toInt();
+        if (val >= 1 && val <= 60) workMinutes = val;
     }
     if (breakIdx >= 0) {
         int endIdx = str.indexOf(',', breakIdx);
         if (endIdx < 0) endIdx = str.length();
-        breakMinutes = str.substring(breakIdx + 6, endIdx).toInt();
+        int val = str.substring(breakIdx + 6, endIdx).toInt();
+        if (val >= 1 && val <= 30) breakMinutes = val;
     }
     if (longIdx >= 0) {
         int endIdx = str.indexOf(',', longIdx);
         if (endIdx < 0) endIdx = str.length();
-        longBreakMinutes = str.substring(longIdx + 10, endIdx).toInt();
+        int val = str.substring(longIdx + 10, endIdx).toInt();
+        if (val >= 5 && val <= 60) longBreakMinutes = val;
     }
     if (sessIdx >= 0) {
         int endIdx = str.indexOf(',', sessIdx);
         if (endIdx < 0) endIdx = str.length();
-        workSessionsBeforeLongBreak = str.substring(sessIdx + 9, endIdx).toInt();
+        int val = str.substring(sessIdx + 9, endIdx).toInt();
+        if (val >= 2 && val <= 10) workSessionsBeforeLongBreak = val;
     }
     if (soundIdx >= 0) {
         int endIdx = str.indexOf(',', soundIdx);
@@ -81,12 +85,14 @@ bool Settings::fromString(const String& str) {
     if (ledIdx >= 0) {
         int endIdx = str.indexOf(',', ledIdx);
         if (endIdx < 0) endIdx = str.length();
-        ledBrightness = str.substring(ledIdx + 10, endIdx).toInt();
+        int val = str.substring(ledIdx + 10, endIdx).toInt();
+        if (val >= 0 && val <= 255) ledBrightness = val;
     }
     if (volIdx >= 0) {
         int endIdx = str.indexOf(',', volIdx);
         if (endIdx < 0) endIdx = str.length();
-        buzzerVolume = str.substring(volIdx + 8, endIdx).toInt();
+        int val = str.substring(volIdx + 8, endIdx).toInt();
+        if (val >= 0 && val <= 255) buzzerVolume = val;
     }
     
     return true;

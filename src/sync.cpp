@@ -21,8 +21,8 @@ bool processSerialCommands(Settings& settings, TimerState& timerState, bool& pin
     while (Serial.available()) {
         char c = Serial.read();
         
-        // Prevent buffer overflow - limit to 256 chars
-        if (c != '\n' && c != '\r' && buffer.length() >= 256) {
+        // Prevent buffer overflow - limit to 255 chars (leaving room for null terminator)
+        if (c != '\n' && c != '\r' && buffer.length() >= 255) {
             buffer = "";  // Reset buffer if it gets too long
             continue;
         }
