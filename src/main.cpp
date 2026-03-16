@@ -195,9 +195,11 @@ void handleTimerMode() {
     }
     
     // Light sleep during timer - wake on button press
+    // Use shorter sleep intervals to check button periodically while saving power
     if (!isBuzzerActive() && g_timerState.isRunning && g_timerState.remainingSeconds > 0) {
-        uint32_t sleepMs = (uint32_t)g_timerState.remainingSeconds * 1000;
-        enterLightSleep(sleepMs);
+        // Sleep for 200ms at a time, then check button again
+        // This balances power savings with button responsiveness
+        enterLightSleep(200);
     }
 }
 
