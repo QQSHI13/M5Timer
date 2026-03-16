@@ -20,16 +20,17 @@ Settings g_settings;
 TimerState g_timerState;
 GlobalState g_state;
 
-
-
 // ============== FORWARD DECLARATIONS ==============
 void handleInitialMode();
 void handleTimerMode();
 void handleSwitchMode();
 void handleSyncMode();
+void handleSleepMode();  // NEW: Low power sleep waiting for button
 void switchToNextModeFromCompleted();
 void enterLightSleep(uint32_t sleepMs);
+void enterDeepSleep();
 void setBuzzerVolume(uint8_t volume);
+void startInitialMode();
 
 // ============== SETUP ==============
 void setup() {
@@ -52,10 +53,13 @@ void setup() {
     setLEDBrightness(g_settings.ledBrightness);
     setBuzzerVolume(g_settings.buzzerVolume);
     
-    // Enter initial mode
-    g_state.systemMode = SystemMode::INITIAL;
+    // CHANGED: Start in SLEEP mode instead of INITIAL
+    // INITIAL mode (white LED) only enters on button press
+    g_state.systemMode = SystemMode::SLEEP;
     g_state.modeStartTime = millis();
-    updateLED(SystemMode::INITIAL, TimerMode::WORK);
+    updateLED(SystemMode::SLEEP, TimerMode::WORK);
+    
+    Serial.println("Boot complete. Press button to start.");
 }
 
 // ============== LOOP ==============
@@ -80,10 +84,54 @@ void loop() {
         case SystemMode::SYNC:
             handleSyncMode();
             break;
+        case SystemMode::SLEEP:
+            handleSleepMode();
+            break;
     }
     
     // Small delay to allow serial processing and reduce CPU usage
     delay(10);
+}
+
+// ============== NEW: SLEEP MODE - Waiting for button press ==============
+void handleSleepMode() {
+    // In sleep mode, we wait for a button press to enter INITIAL mode
+    // LED is off or dim to save power
+    
+    ButtonEvent event = getButtonEvent();
+    if (event == ButtonEvent::SINGLE_CLICK || event == ButtonEvent::DOUBLE_CLICK) {
+        // Any button press wakes up and enters INITIAL mode
+        startInitialMode();
+        return;
+    }
+    
+    // Enter deep sleep - will wake on button interrupt
+    if (!isBuzzerActive()) {
+        enterDeepSleep();
+    }
+}
+
+void enterDeepSleep() {
+    // Configure button GPIO as wakeup source
+    // M5Capsule WAKE button is GPIO42
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)42, LOW);  // Wake on button press (LOW = pressed)
+    
+    // Turn off LED to save power
+    setLEDColor(0, 0, 0);
+    
+    Serial.println("Entering deep sleep...");
+    Serial.flush();
+    
+    // Enter deep sleep
+    esp_deep_sleep_start();
+}
+
+void startInitialMode() {
+    g_state.systemMode = SystemMode::INITIAL;
+    g_state.modeStartTime = millis();
+    updateLED(SystemMode::INITIAL, TimerMode::WORK);
+    playChime();  // Audio feedback that we're starting
+    Serial.println("Entering INITIAL mode");
 }
 
 // ============== MODE TRANSITION HANDLERS ==============
@@ -179,13 +227,19 @@ void handleTimerMode() {
         }
         
         if (g_timerState.remainingSeconds == 0) {
-            // Timer finished - enter SWITCH mode
+            // CHANGED: Timer finished - auto-advance to next mode instead of SWITCH
             g_state.completedFromMode = g_timerState.mode;
             g_timerState.isRunning = false;
             saveTimerState(g_timerState);
-            g_state.systemMode = SystemMode::SWITCH;
-            g_state.modeStartTime = millis();
-            updateLED(SystemMode::SWITCH, g_timerState.mode);
+            
+            // Play completion sound
+            playTimerCompleteSound();
+            
+            // Auto-advance to next mode directly
+            switchToNextModeFromCompleted();
+            
+            // Reset for next timer
+            serialEnded = false;
             break;
         }
     }
@@ -287,6 +341,25 @@ void handleSwitchMode() {
 
 void handleSyncMode() {
     static unsigned long pongWaitStartTime = 0;
+    
+    // CHANGED: Check for single click to exit SYNC mode and jump to TIMER
+    ButtonEvent event = getButtonEvent();
+    if (event == ButtonEvent::SINGLE_CLICK) {
+        // Click-through: exit SYNC and go directly to TIMER mode
+        Serial.println("Button pressed - exiting SYNC to TIMER");
+        pongWaitStartTime = 0;
+        
+        // Start with WORK mode
+        g_timerState.mode = TimerMode::WORK;
+        g_timerState.reset(g_settings);
+        saveTimerState(g_timerState);
+        
+        g_state.systemMode = SystemMode::TIMER;
+        g_state.modeStartTime = millis();
+        updateLED(SystemMode::TIMER, g_timerState.mode);
+        playTimerStartSound(g_timerState.mode, g_settings);
+        return;
+    }
     
     // Check for timeout
     if (!g_state.syncPingReceived) {

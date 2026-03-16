@@ -25,10 +25,11 @@
 
 // ============== ENUMS ==============
 enum class SystemMode {
-    INITIAL,
-    TIMER,
-    SWITCH,
-    SYNC
+    SLEEP,      // NEW: Low power sleep, waiting for button interrupt
+    INITIAL,    // White LED boot window
+    TIMER,      // Active countdown
+    SWITCH,     // Mode selection
+    SYNC        // USB configuration
 };
 
 enum class TimerMode {
