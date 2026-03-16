@@ -15,17 +15,8 @@ void setLEDBrightness(uint8_t brightness) {
     FastLED.show();
 }
 
-void setLEDColor(uint8_t r, uint8_t g, uint8_t b) {
-    leds[0] = CRGB(r, g, b);
-    FastLED.show();
-}
-
 void updateLED(SystemMode systemMode, TimerMode timerMode) {
     switch (systemMode) {
-        case SystemMode::SLEEP:
-            leds[0] = CRGB::Black;  // LED off in sleep mode
-            break;
-            
         case SystemMode::INITIAL:
             leds[0] = CRGB::White;
             break;
