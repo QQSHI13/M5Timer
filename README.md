@@ -2,8 +2,6 @@
 
 A standalone Pomodoro timer for M5Capsule (M5Stack ESP32-S3). No phone needed—just press the button and focus.
 
-![M5Timer](hardware-photo.jpg)
-
 ---
 
 ## ✨ Features
