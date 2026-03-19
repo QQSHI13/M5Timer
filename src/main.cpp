@@ -158,14 +158,22 @@ void handleTimerMode() {
         return;
     }
     
-    // Calculate elapsed seconds using RTC
+    // Calculate elapsed seconds using RTC (handles minute/hour rollovers)
     int elapsedSeconds = 0;
-    if (rtcTime.seconds != lastSecond) {
-        if (rtcTime.seconds > lastSecond) {
-            elapsedSeconds = rtcTime.seconds - lastSecond;
-        } else {
-            elapsedSeconds = (60 - lastSecond) + rtcTime.seconds;
+    if (rtcTime.seconds != lastSecond || rtcTime.minutes != lastRTC.minutes || 
+        rtcTime.hours != lastRTC.hours) {
+        // Convert both times to total seconds for proper difference calculation
+        // Handle 24-hour wraparound by using modulo arithmetic
+        long lastTotalSec = ((long)lastRTC.hours * 3600L + (long)lastRTC.minutes * 60L + lastRTC.seconds);
+        long currTotalSec = ((long)rtcTime.hours * 3600L + (long)rtcTime.minutes * 60L + rtcTime.seconds);
+        
+        // Calculate difference, handling day wraparound (e.g., 23:59:59 -> 00:00:01)
+        long diff = currTotalSec - lastTotalSec;
+        if (diff < 0) {
+            // Wrapped around midnight - add 24 hours worth of seconds
+            diff += 86400L;
         }
+        elapsedSeconds = (int)diff;
         lastSecond = rtcTime.seconds;
         lastRTC = rtcTime;
     }
