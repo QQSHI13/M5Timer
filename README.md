@@ -1,127 +1,97 @@
-# M5Timer ⏱️
+# M5Timer ⏲️
 
-A standalone Pomodoro timer for M5Capsule (M5Stack ESP32-S3). No phone needed—just press the button and focus.
+A hardware Pomodoro timer for the M5Capsule. Physical buttons, LED feedback, and web sync.
 
----
+![M5Timer Photo](photo.jpg)
 
 ## ✨ Features
 
-### Hardware
-- **🔘 Single Button Operation** — Press to start/pause/reset
-- **💡 RGB LED Feedback** — Visual status indication:
-  - 🔴 Red — Work session
-  - 🟢 Green — Short break
-  - 🔵 Blue — Long break
-  - ⚪ White — Timer completed
-- **🔊 Passive Buzzer** — Audio alerts when timer completes
-- **🔌 USB Configuration** — Configure settings via web interface
-- **🔋 Long Battery Life** — Optimized for deep sleep between sessions
+- **🔘 Physical Controls** — Real buttons for start/pause and mode switching
+- **💡 LED Feedback** — Color-coded LEDs show current mode (Work/Break)
+- **🔊 Audio Alerts** — Buzzer notifications when timer completes
+- **🌐 Web Sync** — Configure settings via USB from your browser
+- **💾 Persistent Storage** — Settings saved to flash memory
+- **🔋 Battery Efficient** — Light sleep mode for long battery life
+- **⏰ RTC Support** — Accurate timing even when device sleeps
 
-### Timer Modes
-- **Work** — 25 minutes (configurable)
-- **Short Break** — 5 minutes
-- **Long Break** — 15 minutes (after 4 work sessions)
-- **Auto-progression** — Automatically cycles through Pomodoro sequence
+## 🚀 Quick Start
 
-### Web Sync
-Connect via USB to configure:
-- Work/break durations
-- LED brightness
-- Buzzer volume
-- Session tracking
-
----
-
-## 🔧 Hardware Requirements
-
-| Component | Specification |
-|-----------|---------------|
-| **Board** | M5Capsule (ESP32-S3, 8MB Flash, 320KB RAM) |
-| **LED** | WS2812 RGB LED (GPIO21) |
-| **Button** | WAKE button (GPIO42) |
-| **Buzzer** | Passive buzzer (GPIO2) |
-| **RTC** | BM8563 I2C RTC (SDA=GPIO8, SCL=GPIO10) |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [PlatformIO](https://platformio.org/) installed
-- M5Capsule device
+### Hardware Requirements
+- M5Capsule (ESP32-S3 based)
 - USB-C cable
 
-### Installation
-
+### Software Setup
 ```bash
 # Clone the repository
 git clone https://github.com/QQSHI13/M5Timer.git
 cd M5Timer
 
-# Build and upload
+# Build and flash
 pio run --target upload
 
-# Open serial monitor (optional)
+# Monitor serial output
 pio device monitor
 ```
 
-### Usage
+### Web Configuration
+1. Connect M5Timer to your computer via USB
+2. Open https://qqshi13.github.io/M5Timer/web-sync.html
+3. Click "Connect" and select your device
+4. Adjust settings and sync
 
-1. **Single Press** — Start/pause timer
-2. **Double Press** — Skip to next phase
-3. **Long Press (3s)** — Reset timer
-4. **Connect USB** — Open `web-sync.html` to configure settings
+## 🛠️ Tech Stack
 
----
+- **Firmware:** C++ (Arduino/ESP32 framework)
+- **Hardware:** M5Capsule (ESP32-S3, BM8563 RTC, WS2812 LED)
+- **Web UI:** HTML, JavaScript (Web Serial API)
+- **Build:** PlatformIO
 
-## 🛠️ Technologies
+## 📖 How to Use
 
-- **Hardware**: M5Capsule (ESP32-S3)
-- **Framework**: Arduino / PlatformIO
-- **Libraries**:
-  - M5Unified — Hardware abstraction
-  - Adafruit NeoPixel — LED control
-  - BM8563 — RTC support
-- **Web Config**: HTML5, JavaScript, Web Serial API
+### Physical Controls
+| Action | Button Press |
+|--------|-------------|
+| Start/Pause | Single press |
+| Switch Mode | Double press |
+| Enter Sync | Hold 2 seconds |
 
----
+### LED Colors
+| Color | Mode |
+|-------|------|
+| 🔴 Red | Work (25 min) |
+| 🟢 Green | Short Break (5 min) |
+| 🔵 Blue | Long Break (15 min) |
 
-## 📂 Project Structure
+## 📝 Why I Built This
 
-```
-M5Timer/
-├── src/
-│   └── main.cpp          # Main firmware
-├── web-sync.html         # Web configuration interface
-├── platformio.ini        # PlatformIO configuration
-└── README.md             # This file
-```
+I love the Pomodoro technique, but phone apps are too distracting. I wanted a dedicated device that:
+- Has no notifications except the timer
+- Works without my phone
+- Feels satisfying to use
+- Can be customized via web
 
----
+## 🐛 Known Issues
 
-## 🔋 Power Management
+- Web Serial API only works in Chrome/Edge
+- Battery life depends on LED brightness settings
 
-The M5Timer is optimized for battery life:
-- Deep sleep between button presses
-- RTC maintains timer state
-- LED brightness adjustable
-- Estimated battery life: Several days of intermittent use
+## 🔮 Future Plans
 
----
+- [ ] Vibration motor support
+- [ ] Multiple timer profiles
+- [ ] WiFi sync for remote configuration
+- [ ] E-ink display version
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
-
-See [LICENSE](./LICENSE) for details.
-
----
+This project is licensed under the [GPL-3.0 License](LICENSE).
 
 ## 🙏 Credits
 
-Built with ❤️ by **QQ** and **Nova** ☄️
+Built with ❤️ by [QQ](https://github.com/QQSHI13) & [Nova ☄️](https://openclaw.ai)
 
 Powered by [OpenClaw](https://openclaw.ai)
 
-Uses [M5Stack](https://m5stack.com/) hardware and libraries.
+---
+
+**⭐ Star this repo if you find it useful!**
