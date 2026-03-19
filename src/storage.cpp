@@ -1,7 +1,7 @@
 #include "storage.h"
 #include <Preferences.h>
 
-static const char* PREFS_NAMESPACE = "pomodoro";
+static const char* PREFS_NAMESPACE = "M5Timer";
 
 // ============== SETTINGS IMPLEMENTATION ==============
 void Settings::load(Preferences& prefs) {
