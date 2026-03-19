@@ -18,6 +18,10 @@ void setBuzzerSettings(const Settings& settings) {
 
 void setBuzzerVolume(uint8_t volume) {
     currentVolume = volume;
+    // Apply volume change immediately if buzzer is currently active
+    if (buzzerState.active) {
+        ledcWrite(0, currentVolume);
+    }
 }
 
 // Plays tones sequentially from queue (non-blocking)
