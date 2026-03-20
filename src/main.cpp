@@ -112,12 +112,13 @@ void handleInitialMode() {
     }
     
     // Handle countdown and timeout (no serial output in initial mode)
-    unsigned long remaining = INITIAL_MODE_SECONDS - elapsed;
+    // Use signed arithmetic to avoid unsigned underflow when elapsed > INITIAL_MODE_SECONDS
+    long remaining = (long)INITIAL_MODE_SECONDS - (long)elapsed;
     static int lastBeepSecond = -1;
-    
-    if ((int)remaining != lastBeepSecond && remaining <= 5) {
-        playCountdownBeep(remaining);
-        lastBeepSecond = remaining;
+
+    if (remaining >= 0 && (int)remaining != lastBeepSecond && remaining <= 5) {
+        playCountdownBeep((int)remaining);
+        lastBeepSecond = (int)remaining;
     }
     
     if (elapsed >= INITIAL_MODE_SECONDS) {
