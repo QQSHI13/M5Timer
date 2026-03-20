@@ -46,7 +46,10 @@ String Settings::toString() const {
 
 bool Settings::fromString(const String& str) {
     int workIdx = str.indexOf("work=");
-    int breakIdx = str.indexOf("break=");
+    // Search for ",break=" to avoid matching the "break=" substring inside "longBreak="
+    int breakCommaIdx = str.indexOf(",break=");
+    int breakIdx = (breakCommaIdx >= 0) ? breakCommaIdx + 1
+                 : (str.startsWith("break=") ? 0 : -1);
     int longIdx = str.indexOf("longBreak=");
     int sessIdx = str.indexOf("sessions=");
     int soundIdx = str.indexOf("sound=");
