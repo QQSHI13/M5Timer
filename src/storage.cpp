@@ -106,6 +106,7 @@ void TimerState::load(Preferences& prefs) {
     uint8_t modeVal = prefs.getUChar("tmode", 0);
     mode = static_cast<TimerMode>(modeVal);
     remainingSeconds = prefs.getInt("remSec", 25 * 60);
+    if (remainingSeconds < 0) remainingSeconds = 0;
     isRunning = prefs.getBool("tRunning", false);
     completedWorkSessions = prefs.getUChar("compSessions", 0);
 }

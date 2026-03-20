@@ -185,8 +185,10 @@ void handleTimerMode() {
         if (g_timerState.remainingSeconds > 0) {
             g_timerState.remainingSeconds--;
         }
-        
-        if (g_timerState.remainingSeconds == 0) {
+
+        // Also treat negative values (e.g. from corrupt NVS) as expired
+        if (g_timerState.remainingSeconds <= 0) {
+            g_timerState.remainingSeconds = 0;
             // CHANGED: Timer finished - auto-advance to next mode (skip SWITCH)
             g_state.completedFromMode = g_timerState.mode;
             g_timerState.isRunning = false;
@@ -205,6 +207,7 @@ void handleTimerMode() {
     // Light sleep during timer - wake on button press
     // Sleep for remaining time, button GPIO interrupt will wake
     if (!isBuzzerActive() && g_timerState.isRunning && g_timerState.remainingSeconds > 0) {
+        // remainingSeconds is signed; guard ensures it's positive before the uint32_t cast
         uint32_t sleepMs = (uint32_t)g_timerState.remainingSeconds * 1000;
         enterLightSleep(sleepMs);
     }
