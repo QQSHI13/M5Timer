@@ -5,6 +5,10 @@
 
 static String buffer = "";
 
+void clearSerialBuffer() {
+    buffer = "";
+}
+
 void logCommand(const String& cmd) {
     Serial.println("USB CMD: " + cmd);
 }

@@ -102,6 +102,7 @@ void handleInitialMode() {
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::DOUBLE_CLICK) {
         Serial.begin(115200);  // Enable serial for SYNC mode
+        clearSerialBuffer();   // Discard any stale data from a previous session
         Serial.println("Entering SYNC mode");
         playModeSwitchSound();  // Audio feedback
         g_state.systemMode = SystemMode::SYNC;
@@ -110,7 +111,7 @@ void handleInitialMode() {
         updateLED(SystemMode::SYNC, TimerMode::WORK);
         return;
     }
-    
+
     // Handle countdown and timeout (no serial output in initial mode)
     // Use signed arithmetic to avoid unsigned underflow when elapsed > INITIAL_MODE_SECONDS
     long remaining = (long)INITIAL_MODE_SECONDS - (long)elapsed;
@@ -274,6 +275,7 @@ void handleSwitchMode() {
     } else if (event == ButtonEvent::DOUBLE_CLICK) {
         // Enter sync mode - enable serial first
         Serial.begin(115200);
+        clearSerialBuffer();   // Discard any stale data from a previous session
         Serial.println("Entering SYNC mode");
         playModeSwitchSound();  // Audio feedback
         g_state.systemMode = SystemMode::SYNC;
