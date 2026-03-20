@@ -217,7 +217,10 @@ void handleTimerMode() {
         }
     }
     
-    if (elapsedSeconds > 0 || g_timerState.remainingSeconds == 0) {
+    // Save at most once per 60-second boundary to limit flash write cycles.
+    // Always save when the timer expires (remainingSeconds == 0).
+    if (g_timerState.remainingSeconds == 0 ||
+        (elapsedSeconds > 0 && g_timerState.remainingSeconds % 60 == 0)) {
         saveTimerState(g_timerState);
     }
     
