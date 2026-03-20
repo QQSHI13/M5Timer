@@ -115,6 +115,13 @@ void handleInitialMode() {
     // Use signed arithmetic to avoid unsigned underflow when elapsed > INITIAL_MODE_SECONDS
     long remaining = (long)INITIAL_MODE_SECONDS - (long)elapsed;
     static int lastBeepSecond = -1;
+    static unsigned long lastInitEntry = 0;
+
+    // Reset beep tracking on re-entry so the countdown beeps always fire
+    if (g_state.modeStartTime != lastInitEntry) {
+        lastInitEntry = g_state.modeStartTime;
+        lastBeepSecond = -1;
+    }
 
     if (remaining >= 0 && (int)remaining != lastBeepSecond && remaining <= 5) {
         playCountdownBeep((int)remaining);
@@ -138,10 +145,18 @@ void handleInitialMode() {
 void handleTimerMode() {
     static I2C_BM8563_TimeTypeDef lastRTC;
     static uint8_t lastSecond = 255;
-    
+    static unsigned long lastTimerEntry = 0;
+
+    // Reset RTC baseline whenever we re-enter TIMER mode so the first tick
+    // doesn't accumulate all the time spent in other modes.
+    if (g_state.modeStartTime != lastTimerEntry) {
+        lastTimerEntry = g_state.modeStartTime;
+        lastSecond = 255;
+    }
+
     I2C_BM8563_TimeTypeDef rtcTime;
     rtc.getTime(&rtcTime);
-    
+
     if (lastSecond == 255) {
         lastRTC = rtcTime;
         lastSecond = rtcTime.seconds;
