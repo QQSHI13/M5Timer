@@ -104,6 +104,7 @@ bool Settings::fromString(const String& str) {
 // ============== TIMER STATE IMPLEMENTATION ==============
 void TimerState::load(Preferences& prefs) {
     uint8_t modeVal = prefs.getUChar("tmode", 0);
+    if (modeVal > static_cast<uint8_t>(TimerMode::LONG_BREAK)) modeVal = 0;
     mode = static_cast<TimerMode>(modeVal);
     remainingSeconds = prefs.getInt("remSec", 25 * 60);
     if (remainingSeconds < 0) remainingSeconds = 0;
