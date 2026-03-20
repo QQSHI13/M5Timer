@@ -272,11 +272,8 @@ void handleSwitchMode() {
             g_state.switchPreviewActive = false;
             g_timerState.mode = g_state.previewMode;
             g_timerState.reset(g_settings);
-            if (g_state.completedFromMode == TimerMode::WORK && g_timerState.mode != TimerMode::WORK) {
-                g_timerState.completedWorkSessions++;
-            } else if (g_state.completedFromMode == TimerMode::LONG_BREAK && g_timerState.mode == TimerMode::WORK) {
-                g_timerState.completedWorkSessions = 0;
-            }
+            // Do NOT count completedWorkSessions here; only natural timer
+            // expiry (via switchToNextModeFromCompleted) should count a session.
             saveTimerState(g_timerState);
             g_state.systemMode = SystemMode::TIMER;
             g_state.modeStartTime = millis();
