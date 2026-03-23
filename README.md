@@ -2,8 +2,6 @@
 
 A hardware Pomodoro timer for the M5Capsule. Physical buttons, LED feedback, and web sync.
 
-![M5Timer Photo](photo.jpg)
-
 ## ✨ Features
 
 - **🔘 Physical Controls** — Real buttons for start/pause and mode switching
