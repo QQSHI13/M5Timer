@@ -8,7 +8,8 @@ void setupBuzzer() {
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     // Setup PWM channel 0 for buzzer (8-bit resolution, 2kHz default)
-    ledcSetup(0, 2000, 8);
+    // Using new LEDC API: ledcAttach replaces ledcSetup + ledcAttachPin
+    ledcAttach(BUZZER_PIN, 2000, 8);
 }
 
 void setBuzzerSettings(const Settings& settings) {
@@ -20,7 +21,7 @@ void setBuzzerVolume(uint8_t volume) {
     currentVolume = volume;
     // Apply volume change immediately if buzzer is currently active
     if (buzzerState.active) {
-        ledcWrite(0, currentVolume);
+        ledcWrite(BUZZER_PIN, currentVolume);
     }
 }
 
@@ -38,11 +39,11 @@ void updateBuzzer() {
             // Play next tone in queue
             buzzerState.currentTone = buzzerState.queue[buzzerState.queueIndex];
             buzzerState.toneStartTime = now;
-            ledcWriteTone(0, buzzerState.currentTone.frequency);
-            ledcWrite(0, currentVolume);  // Apply configurable volume
+            ledcWriteTone(BUZZER_PIN, buzzerState.currentTone.frequency);
+            ledcWrite(BUZZER_PIN, currentVolume);  // Apply configurable volume
         } else {
             // Queue finished
-            ledcDetachPin(BUZZER_PIN);
+            ledcDetach(BUZZER_PIN);
             digitalWrite(BUZZER_PIN, LOW);
             buzzerState.active = false;
             buzzerState.queueSize = 0;
@@ -58,6 +59,7 @@ void playToneSequence(const Tone* tones, uint8_t count) {
         return;
     }
 
+    // Clamp count to prevent buffer overflow (queue has 4 elements)
     if (count == 0 || count > 4) return;
 
     buzzerState.queueSize = count;
@@ -70,10 +72,10 @@ void playToneSequence(const Tone* tones, uint8_t count) {
     buzzerState.currentTone = buzzerState.queue[0];
     buzzerState.toneStartTime = millis();
     buzzerState.active = true;
-    
-    ledcAttachPin(BUZZER_PIN, 0);
-    ledcWriteTone(0, buzzerState.currentTone.frequency);
-    ledcWrite(0, currentVolume);  // Apply configurable volume
+
+    // Ensure pin is attached for tone output
+    ledcAttach(BUZZER_PIN, buzzerState.currentTone.frequency, 8);
+    ledcWrite(BUZZER_PIN, currentVolume);  // Apply configurable volume
 }
 
 void playSound(SoundType type) {

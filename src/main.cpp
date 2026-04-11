@@ -195,12 +195,23 @@ void handleTimerMode() {
         lastRTC = rtcTime;
     }
     
+    // Track if we crossed a 60-second boundary for saving
+    static int lastSavedMinuteBoundary = -1;
+    bool shouldSave = false;
+
     // Update timer
     while (elapsedSeconds > 0 && g_timerState.isRunning) {
         elapsedSeconds--;
-        
+
         if (g_timerState.remainingSeconds > 0) {
             g_timerState.remainingSeconds--;
+        }
+
+        // Check if we crossed a 60-second boundary (for save throttling)
+        int currentBoundary = g_timerState.remainingSeconds / 60;
+        if (currentBoundary != lastSavedMinuteBoundary) {
+            shouldSave = true;
+            lastSavedMinuteBoundary = currentBoundary;
         }
 
         // Also treat negative values (e.g. from corrupt NVS) as expired
@@ -210,17 +221,17 @@ void handleTimerMode() {
             g_state.completedFromMode = g_timerState.mode;
             g_timerState.isRunning = false;
             saveTimerState(g_timerState);
-            
+            lastSavedMinuteBoundary = -1;  // Reset for next timer
+
             // Auto-advance to next mode directly
             switchToNextModeFromCompleted();
             break;
         }
     }
-    
+
     // Save at most once per 60-second boundary to limit flash write cycles.
     // Always save when the timer expires (remainingSeconds == 0).
-    if (g_timerState.remainingSeconds == 0 ||
-        (elapsedSeconds > 0 && g_timerState.remainingSeconds % 60 == 0)) {
+    if (g_timerState.remainingSeconds == 0 || shouldSave) {
         saveTimerState(g_timerState);
     }
     
@@ -266,6 +277,10 @@ void handleSwitchMode() {
                     g_state.previewMode = TimerMode::LONG_BREAK;
                     break;
                 case TimerMode::LONG_BREAK:
+                    g_state.previewMode = TimerMode::WORK;
+                    break;
+                default:
+                    // Invalid mode - reset to WORK for safety
                     g_state.previewMode = TimerMode::WORK;
                     break;
             }

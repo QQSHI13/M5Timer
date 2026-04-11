@@ -48,20 +48,25 @@ ButtonEvent getButtonEvent() {
     if (buttonState.clickCount == 0) {
         return ButtonEvent::NONE;
     }
-    
-    // If we have 2 clicks, it's a double-click
+
+    // If we have 2+ clicks, return a double-click and preserve any extra clicks
     if (buttonState.clickCount >= 2) {
-        buttonState.clickCount = 0;
+        buttonState.clickCount -= 2;  // Consume 2 clicks, keep any extra
         buttonState.waitingForDouble = false;
+        // If there's still a click remaining, we're effectively waiting for a double again
+        if (buttonState.clickCount > 0) {
+            buttonState.waitingForDouble = true;
+            buttonState.lastClickTime = millis();  // Reset timeout for remaining click
+        }
         return ButtonEvent::DOUBLE_CLICK;
     }
-    
+
     // If waiting period expired with 1 click, it's a single-click
     if (buttonState.clickCount == 1 && !buttonState.waitingForDouble) {
         buttonState.clickCount = 0;
         return ButtonEvent::SINGLE_CLICK;
     }
-    
+
     return ButtonEvent::NONE;
 }
 
