@@ -33,7 +33,7 @@ pio device monitor
 
 ### Web Configuration
 1. Connect M5Timer to your computer via USB
-2. Open https://qqshi13.github.io/M5Timer/web-sync.html
+2. Open https://qqshi13.github.io/M5Timer
 3. Click "Connect" and select your device
 4. Adjust settings and sync
 
