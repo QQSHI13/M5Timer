@@ -4,12 +4,15 @@ static BuzzerState buzzerState;
 static const Settings* settingsPtr = nullptr;
 static uint8_t currentVolume = BUZZER_VOLUME;  // Configurable volume
 
+// LEDC channel for buzzer (old API compatible with ESP-IDF v6 / Arduino 3.x)
+#define BUZZER_LEDC_CHANNEL 0
+
 void setupBuzzer() {
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     // Setup PWM channel 0 for buzzer (8-bit resolution, 2kHz default)
-    // Using new LEDC API: ledcAttach replaces ledcSetup + ledcAttachPin
-    ledcAttach(BUZZER_PIN, 2000, 8);
+    ledcSetup(BUZZER_LEDC_CHANNEL, 2000, 8);
+    ledcAttachPin(BUZZER_PIN, BUZZER_LEDC_CHANNEL);
 }
 
 void setBuzzerSettings(const Settings& settings) {
@@ -21,7 +24,7 @@ void setBuzzerVolume(uint8_t volume) {
     currentVolume = volume;
     // Apply volume change immediately if buzzer is currently active
     if (buzzerState.active) {
-        ledcWrite(BUZZER_PIN, currentVolume);
+        ledcWrite(BUZZER_LEDC_CHANNEL, currentVolume);
     }
 }
 
@@ -39,11 +42,11 @@ void updateBuzzer() {
             // Play next tone in queue
             buzzerState.currentTone = buzzerState.queue[buzzerState.queueIndex];
             buzzerState.toneStartTime = now;
-            ledcWriteTone(BUZZER_PIN, buzzerState.currentTone.frequency);
-            ledcWrite(BUZZER_PIN, currentVolume);  // Apply configurable volume
+            ledcWriteTone(BUZZER_LEDC_CHANNEL, buzzerState.currentTone.frequency);
+            ledcWrite(BUZZER_LEDC_CHANNEL, currentVolume);  // Apply configurable volume
         } else {
             // Queue finished
-            ledcDetach(BUZZER_PIN);
+            ledcDetachPin(BUZZER_PIN);
             digitalWrite(BUZZER_PIN, LOW);
             buzzerState.active = false;
             buzzerState.queueSize = 0;
@@ -74,8 +77,9 @@ void playToneSequence(const Tone* tones, uint8_t count) {
     buzzerState.active = true;
 
     // Ensure pin is attached for tone output
-    ledcAttach(BUZZER_PIN, buzzerState.currentTone.frequency, 8);
-    ledcWrite(BUZZER_PIN, currentVolume);  // Apply configurable volume
+    ledcAttachPin(BUZZER_PIN, BUZZER_LEDC_CHANNEL);
+    ledcWriteTone(BUZZER_LEDC_CHANNEL, buzzerState.currentTone.frequency);
+    ledcWrite(BUZZER_LEDC_CHANNEL, currentVolume);  // Apply configurable volume
 }
 
 void playSound(SoundType type) {
