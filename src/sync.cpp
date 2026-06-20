@@ -7,6 +7,11 @@ static String buffer = "";
 
 void clearSerialBuffer() {
     buffer = "";
+    // Also drain the UART hardware RX FIFO to discard stale bytes
+    // that accumulated before Serial was initialized
+    while (Serial.available()) {
+        Serial.read();
+    }
 }
 
 void logCommand(const String& cmd) {

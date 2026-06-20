@@ -333,7 +333,14 @@ void handleSwitchMode() {
 void handleSyncMode() {
     static unsigned long pongWaitStartTime = 0;
     
-    // CHANGED: Check for single click to exit SYNC mode and jump to TIMER
+    // Reset pong timeout whenever we're back in Phase 1 (waiting for PING).
+    // This handles re-entry to SYNC mode after a previous PING→PONG session
+    // where pongWaitStartTime might have been set.
+    if (!g_state.syncPingReceived) {
+        pongWaitStartTime = 0;
+    }
+    
+    // Check for single click to exit SYNC mode and jump to TIMER
     ButtonEvent event = getButtonEvent();
     if (event == ButtonEvent::SINGLE_CLICK) {
         // Click-through: exit SYNC and go directly to TIMER mode

@@ -66,19 +66,19 @@ bool Settings::fromString(const String& str) {
         int endIdx = str.indexOf(',', breakIdx);
         if (endIdx < 0) endIdx = str.length();
         int val = str.substring(breakIdx + 6, endIdx).toInt();
-        if (val >= 1 && val <= 30) breakMinutes = val;
+        if (val >= 1 && val <= 60) breakMinutes = val;
     }
     if (longIdx >= 0) {
         int endIdx = str.indexOf(',', longIdx);
         if (endIdx < 0) endIdx = str.length();
         int val = str.substring(longIdx + 10, endIdx).toInt();
-        if (val >= 5 && val <= 60) longBreakMinutes = val;
+        if (val >= 1 && val <= 60) longBreakMinutes = val;
     }
     if (sessIdx >= 0) {
         int endIdx = str.indexOf(',', sessIdx);
         if (endIdx < 0) endIdx = str.length();
         int val = str.substring(sessIdx + 9, endIdx).toInt();
-        if (val >= 2 && val <= 10) workSessionsBeforeLongBreak = val;
+        if (val >= 1 && val <= 60) workSessionsBeforeLongBreak = val;
     }
     if (soundIdx >= 0) {
         int endIdx = str.indexOf(',', soundIdx);
@@ -89,13 +89,13 @@ bool Settings::fromString(const String& str) {
         int endIdx = str.indexOf(',', ledIdx);
         if (endIdx < 0) endIdx = str.length();
         int val = str.substring(ledIdx + 10, endIdx).toInt();
-        if (val >= 0 && val <= 255) ledBrightness = val;
+        if (val >= 1 && val <= 60) ledBrightness = val;
     }
     if (volIdx >= 0) {
         int endIdx = str.indexOf(',', volIdx);
         if (endIdx < 0) endIdx = str.length();
         int val = str.substring(volIdx + 8, endIdx).toInt();
-        if (val >= 0 && val <= 255) buzzerVolume = val;
+        if (val >= 1 && val <= 60) buzzerVolume = val;
     }
     
     return true;
