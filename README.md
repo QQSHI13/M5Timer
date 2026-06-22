@@ -81,35 +81,38 @@ The M5Timer has four system modes:
 
 ### Timer Flow (Pomodoro Cycle)
 
+```mermaid
+graph TD
+    WORK["Work 🔴<br/>25 min default"]
+    BREAK["Short Break 🟢<br/>5 min default"]
+    LONGBREAK["Long Break 🔵<br/>15 min default"]
+    CHECK{Completed
+< 4 sessions?}
+
+    WORK -->|timer ends| BREAK
+    BREAK --> WORK
+    WORK --> CHECK
+    CHECK -->|yes| WORK
+    CHECK -->|no| LONGBREAK
+    LONGBREAK -->|reset counter| WORK
+
+    style WORK fill:#e74c3c,color:#fff
+    style BREAK fill:#2ecc71,color:#fff
+    style LONGBREAK fill:#3498db,color:#fff
 ```
-                  ┌─────────────┐
-                  │   WORK      │ (25 min default)
-                  │   🔴 Red    │
-                  └──────┬──────┘
-                         │ timer ends
-                         ▼
-                  ┌─────────────┐
-                  │   BREAK     │ (5 min default)
-                  │   🟢 Green  │
-                  └──────┬──────┘
-                         │ timer ends
-                         ▼
-               ┌──────────────────┐
-               │   WORK again     │
-               │   (counter +1)   │
-               └──────┬───────────┘
-                      │
-            repeat 4 times (default)
-                      │
-                      ▼
-               ┌──────────────┐
-               │  LONG BREAK  │ (15 min default)
-               │  🔵 Blue     │
-               └──────┬───────┘
-                      │ timer ends
-                      ▼
-               session counter resets
-               back to WORK
+
+The Pomodoro algorithm:
+```
+workSessionsCompleted = 0
+
+START WORK
+  ↓ timer completes
+IF workSessionsCompleted + 1 >= sessionsBeforeLongBreak:
+  → LONG BREAK
+  → workSessionsCompleted = 0
+ELSE:
+  → BREAK
+  → workSessionsCompleted += 1
 ```
 
 ### Detailed Walkthrough
@@ -309,22 +312,7 @@ main.cpp
 └── hardware.cpp      — Power, RTC initialization
 ```
 
-### Pomodoro Algorithm
-
-```
-workSessionsCompleted = 0
-
-START WORK (25 min)
-  ↓ timer completes
-IF workSessionsCompleted + 1 >= sessionsBeforeLongBreak (default 4):
-  → LONG BREAK (15 min)
-  → workSessionsCompleted = 0
-ELSE:
-  → BREAK (5 min)
-  → workSessionsCompleted += 1
-```
-
-### Web Sync Protocol
+### Firmware Architecture Protocol
 Web sync uses a simple text-based serial protocol over USB CDC:
 ```
 Device → PC:  "work=25,break=5,longBreak=15,sessions=4,sound=1,brightness=16,volume=24\n"
